@@ -114,6 +114,7 @@ comment) -->
 	    var start = 0.0;
 	    var end;
 	    var isSetup = false;
+	    var longestTimeOffset;
 
             function initialize() {
                 // Start with animation disabled
@@ -212,13 +213,14 @@ comment) -->
 
                 // Setup function to center and zoom the map appropriately
                 // to display the tracks
+		// precon - if there are tracks that they are valid
                 var f_setup = function (f_next) {	                        
 			var tracksLength = tracks.length;
                         var theMinLon = 180.0;
                         var theMaxLon = -180.0;
                         var theMinLat = 90.0;
                         var theMaxLat = -90.0;
-			var badFiles = new Array();
+			var badFiles = new Array(); // should not be needed cos of the precon
 
                         for (var i = 0; i < tracksLength; ++i) {
                             var bounds = tracks[i].theBounds;
@@ -306,7 +308,7 @@ comment) -->
                     //if the option is selected, delete the option
                     if (src.options[count].selected == true) {
 		        var itemText = src.options[count].text;
-			removedItems.push(itemText);
+			removedItems.push(count);
 			
                         try {
                             src.remove(count, null);
@@ -316,17 +318,35 @@ comment) -->
                     }
                 }
 
-		// TODO - rebuild the tracks - but do not re-fetch
-                //~ var tracksLength = tracks.length;
-		//~ for (var i = tracksLength - 1; i >= 0; i--) {
-		    //~ if(tracks.
-		//~ }
+		// rebuild the tracks
+		var newTracks = new Array();
+                var tracksLength = tracks.length;
+		var removedItemsLength = removedItems.length();
+		for (var i = 0; i < tracksLength; ++i) {
+		    var matchFound = false;
+		    for(var j = 0; j < removedItemsLength; ++j){
+		          if(j === i){
+			      matchFound = true;
+			  }
+		    }
+		    if(!matchFound){
+		        newTracks.push(tracks[i]);
+		    }
+		}
+		tracks = newTracks;
+		
 		isSetup = false;
             }
 	    
 	    function completeAdd(theTrack){
 		tracks.push(theTrack);
+		longestTimeOffset = 0.0;
 		isSetup = false;
+		
+		var tracksLength = tracks.length;
+		for (var i = 0; i < tracksLength; ++i) {
+			longestTimeOffset = Math.max(longestTimeOffset, tracks[i].elapsedTime);
+		}
 		
 		var listBox = document.getElementById('lsbox');
 
@@ -386,11 +406,11 @@ comment) -->
 			step: 1,
 			slide: function( event, ui ) {
 			        var sliderValue = ui.value;
-				end = sliderValue;
-				$( "#amount" ).val(ui.value );
-				// rather put showtracks
-				// put fdisplay in here - need setup also
-				// could just call showtracks??
+				end = (longestTimeOffset * ui.value) / 100;
+				start = 0.0;
+				var displayValue = end / 1000; // convert to seconds
+				showtracks();
+				$( "#amount" ).val(displayValue);
 			}
 		});
 		$( "#amount" ).val($( "#slider" ).slider( "value" ) );
@@ -438,7 +458,7 @@ comment) -->
         </div>
         <p>
 	<p>
-	<label for="amount">Donation amount ($50 increments):</label>
+	<label for="amount">Elapsed time (1% increments):</label>
 	<input type="text" id="amount" style="border:0; color:#f6931f; font-weight:bold;" />
 	</p>
             <div id="slider"></div>

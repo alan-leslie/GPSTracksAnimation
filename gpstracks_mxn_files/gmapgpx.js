@@ -167,8 +167,6 @@ GPSTrack.prototype.setup = function (gpx) {
     var theXMLSegments = gpxGetElements(gpx, "trkseg");
     var segsLength = theXMLSegments.length;
     var isValid = false;
-    var startDateTime = null;
-    var lastSegment;
 	
     for (var i = 0; i < segsLength; ++i) {
         var pts = gpxGetElements(theXMLSegments[i], "trkpt");
@@ -178,14 +176,16 @@ GPSTrack.prototype.setup = function (gpx) {
 		if(!isValid){
 			isValid = true;
 		}
-		
-		if(startDateTime === null){
-			firstTime =  gpx_datetime(gpxGetElements(pts[0], "time")[0].firstChild.nodeValue);
-		}
 	}
 	
-        var theSegment = new GPSTrackSegment(pts, startDateTime);
+	var segmentStartDateTime =  gpx_datetime(gpxGetElements(pts[0], "time")[0].firstChild.nodeValue);	
+        var theSegment = new GPSTrackSegment(pts, segmentStartDateTime);
         this.theSegments.push(theSegment);
+	
+	var pointsLength = theSegment.points.length;
+	if(pointsLength > 0){
+		this.elapsedTime = this.elapsedTime + theSegment.points[pointsLength - 1].timeOffset;
+	}
     }
     
     if(isValid){
@@ -200,12 +200,6 @@ GPSTrack.prototype.setup = function (gpx) {
 	    return;
     }
     
-    lastSegment = this.theSegments[segsLength -1];
-    var pointsLength = lastSegment.points.length;
-    // TODO - what if last segment is empty??
-    this.elapsedTime = lastSegment.points[pointsLength - 1].timeOffset;
-    
-
     this.theWayPoints = gpxGetElements(gpx, "wpt");
     var xmlBounds = get_bounds(gpx);
 
@@ -342,13 +336,16 @@ function plot_this_pointlist(pts, map, lw, lineColor, start, end) {
     //~ if (!lineColor) lineColor = "#0000aa";
 
     //~ var polyPts = [];
+	if(!start) start = 0.0;
 
     for (var i = 1; i < pts.length; i++) {
-	     var theTime = pts[i].time;
-	     var thePoint = new mxn.LatLonPoint(pts[i].latitude, pts[i].longitude);
-	     var prevPoint = new mxn.LatLonPoint(pts[i - 1].latitude, pts[i -1].longitude);
+	     var theTimeOffset = pts[i].timeOffset;
+	     if(!end || end > theTimeOffset){
+		     var thePoint = new mxn.LatLonPoint(pts[i].latitude, pts[i].longitude);
+		     var prevPoint = new mxn.LatLonPoint(pts[i - 1].latitude, pts[i -1].longitude);
 
-	    showPoint(thePoint, prevPoint, lineColor);
+		    showPoint(thePoint, prevPoint, lineColor);
+	     }
         //~ polyPts.push(new mxn.LatLonPoint(pts[i].latitude, pts[i].longitude));
     }
 
@@ -401,14 +398,21 @@ function plot_these_segments(map, lw, colors, limit, segs, start, end) {
     if (!lw) lw = 2;
     if (!colors) colors = ["#0000aa"];
     if (!limit) limit = 2;
+    if (!start) start = 0.0;
 
     var n = colors.length;
 
     for (var i = 0; i < segs.length; ++i) {
-        var pts = segs[i].points; // gpxGetElements(segs[j], "trkpt");
-        var ptsLength = pts.length;
-        if (pts.length > limit) {
-            plot_this_pointlist(pts, map, lw, colors[i % n], start, end);
+	if(!end || end > 0.0){
+		var pts = segs[i].points; 
+		var ptsLength = pts.length;
+		if (pts.length > limit) {
+		    plot_this_pointlist(pts, map, lw, colors[i % n], start, end);
+		}
+		
+		if(end){
+			end = end - pts[ptsLength -1].timeOffset;
+		}
         }
     }
 }
