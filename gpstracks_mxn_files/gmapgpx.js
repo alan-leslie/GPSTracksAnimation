@@ -52,9 +52,10 @@ var GPSTrackPoint = function (thePoint, startDateTime) {
         this.elevation = parseFloat(node.firstChild.nodeValue);
     };
 
-var GPSTrackSegment = function (pts, startDateTime) {
+var GPSTrackSegment = function (pts, startDateTime, prevSegmentEnd) {
         // TODO - generate a set of points at regular intervals
-        this.points = [];
+	this.prevSegmentEndOffset = prevSegmentEnd;
+        this.points = new Array();
         var ptsLength = pts.length;
         for (var i = 0; i < ptsLength; ++i) {
             var thePoint = new GPSTrackPoint(pts[i], startDateTime);
@@ -97,6 +98,59 @@ GPSTrack.prototype.fetch = function (cback, err) {
     return this.isFetched;
 };
 
+GPSTrack.prototype.setup = function (gpx) {
+    // var self = this;
+    var theXMLSegments = gpxGetElements(gpx, "trkseg");
+    var segsLength = theXMLSegments.length;
+    var isValid = false;
+	var previousSegmentEnd = 0.0;
+	
+    for (var i = 0; i < segsLength; ++i) {
+        var pts = gpxGetElements(theXMLSegments[i], "trkpt");
+        var ptsLength = pts.length;
+	    
+	if(ptsLength > 0){
+		if(!isValid){
+			isValid = true;
+		}
+	}
+	
+	var segmentStartDateTime =  gpx_datetime(gpxGetElements(pts[0], "time")[0].firstChild.nodeValue);	
+        var theSegment = new GPSTrackSegment(pts, segmentStartDateTime, previousSegmentEnd);
+	var segmentEnd = theSegment.points[ptsLength - 1].timeOffset
+        this.theSegments.push(theSegment);
+	
+	var pointsLength = theSegment.points.length;
+	if(pointsLength > 0){
+		this.elapsedTime = this.elapsedTime + segmentEnd;
+	}
+	
+	previousSegmentEnd = previousSegmentEnd + segmentEnd;
+    }
+    
+    if(isValid){
+ 	    if(this.onLoadValid){
+		    this.onLoadValid(this);
+	    }
+    } else {
+	    if(this.onLoadError){
+		    this.onLoadError(this.fileName);
+	    }
+	    
+	    return;
+    }
+    
+    this.theWayPoints = gpxGetElements(gpx, "wpt");
+    var xmlBounds = get_bounds(gpx);
+
+    if (!xmlBounds) {
+        xmlBounds = this.getBoundsFromSegments();
+    }
+
+    this.theBounds.sw = new mxn.LatLonPoint(xmlBounds.minY, xmlBounds.minX);
+    this.theBounds.ne = new mxn.LatLonPoint(xmlBounds.maxY, xmlBounds.maxX);
+};
+
 GPSTrack.prototype.getBoundsFromSegments = function () {
     var firstPoint = this.theSegments[0].points[0];
     var theMinLon = firstPoint.longitude;
@@ -130,7 +184,6 @@ GPSTrack.prototype.getBoundsFromSegments = function () {
 };
 
 GPSTrack.prototype.animate = function (map, colors, speed_mult, maxZ) {
-
     var fcancel;
     var segs = this.theSegments;
     var segLength = segs.length;
@@ -160,55 +213,6 @@ GPSTrack.prototype.display = function (map, colors, start, end, icon) {
 	// TODO - check that the segments are in the time range
     plot_these_segments(map, 3, colors, 3, this.theSegments, start, end);
     plot_points(this.theWayPoints, map, icon);
-};
-
-GPSTrack.prototype.setup = function (gpx) {
-    // var self = this;
-    var theXMLSegments = gpxGetElements(gpx, "trkseg");
-    var segsLength = theXMLSegments.length;
-    var isValid = false;
-	
-    for (var i = 0; i < segsLength; ++i) {
-        var pts = gpxGetElements(theXMLSegments[i], "trkpt");
-        var ptsLength = pts.length;
-	    
-	if(ptsLength > 0){
-		if(!isValid){
-			isValid = true;
-		}
-	}
-	
-	var segmentStartDateTime =  gpx_datetime(gpxGetElements(pts[0], "time")[0].firstChild.nodeValue);	
-        var theSegment = new GPSTrackSegment(pts, segmentStartDateTime);
-        this.theSegments.push(theSegment);
-	
-	var pointsLength = theSegment.points.length;
-	if(pointsLength > 0){
-		this.elapsedTime = this.elapsedTime + theSegment.points[pointsLength - 1].timeOffset;
-	}
-    }
-    
-    if(isValid){
- 	    if(this.onLoadValid){
-		    this.onLoadValid(this);
-	    }
-    } else {
-	    if(this.onLoadError){
-		    this.onLoadError(this.fileName);
-	    }
-	    
-	    return;
-    }
-    
-    this.theWayPoints = gpxGetElements(gpx, "wpt");
-    var xmlBounds = get_bounds(gpx);
-
-    if (!xmlBounds) {
-        xmlBounds = this.getBoundsFromSegments();
-    }
-
-    this.theBounds.sw = new mxn.LatLonPoint(xmlBounds.minY, xmlBounds.minX);
-    this.theBounds.ne = new mxn.LatLonPoint(xmlBounds.maxY, xmlBounds.maxX);
 };
 
 /**
@@ -327,7 +331,7 @@ function gpx_datetime(input) {
  * @param     lw      line width (optional: default 2)
  * @param     color   line color (optional: default #0000aa)
  */
-function plot_this_pointlist(pts, map, lw, lineColor, start, end) {
+function plot_this_pointlist(pts, map, lw, lineColor, start, end, thisSegmentStart) {
     //~ var lw = 2;
     //~ var colors = ['#0000aa'];
     //~ var limit = 2;
@@ -338,9 +342,10 @@ function plot_this_pointlist(pts, map, lw, lineColor, start, end) {
     //~ var polyPts = [];
 	if(!start) start = 0.0;
 
+	// TODO - need to include prev an next points???
     for (var i = 1; i < pts.length; i++) {
-	     var theTimeOffset = pts[i].timeOffset;
-	     if(!end || end > theTimeOffset){
+	     var theTimeOffset = thisSegmentStart + pts[i].timeOffset;
+	     if(!end || (theTimeOffset > start && theTimeOffset < end)){
 		     var thePoint = new mxn.LatLonPoint(pts[i].latitude, pts[i].longitude);
 		     var prevPoint = new mxn.LatLonPoint(pts[i - 1].latitude, pts[i -1].longitude);
 
@@ -403,16 +408,20 @@ function plot_these_segments(map, lw, colors, limit, segs, start, end) {
     var n = colors.length;
 
     for (var i = 0; i < segs.length; ++i) {
-	if(!end || end > 0.0){
-		var pts = segs[i].points; 
-		var ptsLength = pts.length;
+	var pts = segs[i].points; 
+	var ptsLength = pts.length;
+	var lastTimeOffset =  pts[ptsLength -1].timeOffset;
+	var segmentStart = segs[i].prevSegmentEndOffset;
+	var segmentEnd = segmentStart + lastTimeOffset;
+	    
+	if(!end || (end > segmentStart && start < segmentEnd)){
 		if (pts.length > limit) {
-		    plot_this_pointlist(pts, map, lw, colors[i % n], start, end);
+		    plot_this_pointlist(pts, map, lw, colors[i % n], start, end, segmentStart);
 		}
 		
-		if(end){
-			end = end - pts[ptsLength -1].timeOffset;
-		}
+		//~ if(end){
+			//~ end = end - lastTimeOffset;
+		//~ }
         }
     }
 }
