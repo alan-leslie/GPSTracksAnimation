@@ -208,6 +208,7 @@ comment) -->
             function showtracks() {
                 var colors = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#00ffff", "#ff00ff", "#000000", "#ffffff"],
 		zoom = 5;
+		var timeout_id = 0;
 
 		if(!isSetup){
                 map.removeAllMarkers();
@@ -277,16 +278,32 @@ comment) -->
 		      
 		      if(end < longestTimeOffset){
 		      // TODO - put slider at end pos
+		      var noOfIncrements = 0.0;
+		      if(end < 2.0){
+		          end = 0;
+			  noOfIncrements = 0;
+			  } else {
+			      noOfIncrements = end / sliderTimeIncrement;
+			}
+			      
+		      $( "#slider" ).slider("value", noOfIncrements);
 		      end = end + sliderTimeIncrement;
-		      var timeout_id = setTimeout(animateTracks, sliderTimeIncrement / speed_mult);
+		      timeout_id = setTimeout(animateTracks, sliderTimeIncrement / speed_mult);
 		      } else {
+			$('#toggle').click();
 		            // set fcancel to none
 			    // set play pause buttons
 		      }
+                    };
+		    
 		      // could just define fcancel to clear the timeout
 		      // but need to handle the case where there is no timeout id
 		      //fcancel =  clearTimeout(timeout_id);
-                    };
+	      fcancel = function(){
+	          if(timeout_id > 0){
+		    clearTimeout(timeout_id);
+		    }
+		    };
 
                 // Display the tracks.
                 var f_display = function () {
@@ -297,8 +314,7 @@ comment) -->
                         }
                     };
 
-
-                if (speed_mult == 0) {
+                if (speed_mult == 0 || $("#toggle").attr("class") == "play") {
 		    if(isSetup){
 		        f_display();
 		    } else {
@@ -430,15 +446,19 @@ comment) -->
 			max: 100,
 			step: 1,
 			slide: function( event, ui ) {
+			        if($("#toggle").attr("class") == "pause"){
+				    $("#toggle").click();
+				}
 			        var sliderValue = ui.value;
 				end = (longestTimeOffset * ui.value) / 100;
 				if(start > end){
 					start = 0.0;
 				}
 				var displayValue = end / 1000; // convert to seconds
+				var displayText = displayValue + "/" + longestTimeOffset;
 				showtracks();
 				start = end;
-				$( "#amount" ).val(displayValue);
+				$( "#amount" ).val(displayText);
 			}
 		});
 		$( "#amount" ).val($( "#slider" ).slider( "value" ) );
@@ -449,8 +469,8 @@ comment) -->
                 $('#toggle').bind("click", function () {
                     if ($(this).attr("class") == "play"){
 		    // add a time to showtracks so that it knows where it was paused
-			showtracks();
 		        $(this).attr("class", "pause");
+			showtracks();
                    } else {
 		   // TODO - need this to cancel all
 		   // or actually pause so that play can resume
