@@ -63,10 +63,10 @@ var GPSTrackSegment = function (pts, startDateTime, prevSegmentEnd) {
         }
     };
 
-var GPSTrack = function (theFileName, onLoadValidFunction, onLoadErrorFunction) {
+var GPSTrack = function (theFileName, theColour, onLoadValidFunction, onLoadErrorFunction) {
         var self = this;
         self.fileName = theFileName;
-        self.colour = "red";
+        self.colour = theColour;
         // TODO - get colour - generate f rom md5??
         // and use it in the display
         self.isFetched = false;
@@ -91,6 +91,12 @@ GPSTrack.prototype.fetch = function (cback, err) {
     //~ .fail(f_error);
     //~ fetch_gpx(this.fileName, function(gpx, self){cback(gpx, self);}, err);
     var req_cache = new ReqCache();
+	// todo - sort the open street map stuff
+	    //~ if(url.indexOf("openstreetmap") !== -1){
+		  //~ var splitUrl = url.split("/");
+		  //~ var trackIdNumber =  splitUrl[splitUrl.length -1];
+		  //~ url = "http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D%22http%3A%2F%2Fwww.openstreetmap.org%2Ftrace%2F" + trackIdNumber + "%2Fdata%22";
+	    //~ }
 	// change this so that the complete add is called
     fetch_gpx(req_cache, this.fileName, self, this.setup.bind(this), err);
     this.isFetched = true; // this is just an indicator that the ajax call 
@@ -195,7 +201,7 @@ GPSTrack.prototype.animate = function (map, colors, speed_mult, maxZ) {
             'scale': speed_mult,
             'skip': 2,
             'color': colors[segnum % n],
-            'zcolor': maxZ,
+   	    'zcolor': maxZ,
             'fdone': function () {
                 segnum++;
                 if (segnum < segs.length) animation();
@@ -211,7 +217,7 @@ GPSTrack.prototype.animate = function (map, colors, speed_mult, maxZ) {
 // TODO - add a time interval to display
 GPSTrack.prototype.display = function (map, colors, start, end, icon) {
 	// TODO - check that the segments are in the time range
-    plot_these_segments(map, 3, colors, 3, this.theSegments, start, end);
+    plot_these_segments(map, 3, this.theColour, 3, this.theSegments, start, end);
     plot_points(this.theWayPoints, map, icon);
 };
 
@@ -399,13 +405,13 @@ function plot_this_pointlist(pts, map, lw, lineColor, start, end, thisSegmentSta
  * }
  */
 
-function plot_these_segments(map, lw, colors, limit, segs, start, end) {
+function plot_these_segments(map, lw, colour, limit, segs, start, end) {
     if (!lw) lw = 2;
-    if (!colors) colors = ["#0000aa"];
+    if (!colour) colour = ["#0000aa"];
     if (!limit) limit = 2;
     if (!start) start = 0.0;
 
-    var n = colors.length;
+    //~ var n = colors.length;
 
     for (var i = 0; i < segs.length; ++i) {
 	var pts = segs[i].points; 
@@ -416,7 +422,7 @@ function plot_these_segments(map, lw, colors, limit, segs, start, end) {
 	    
 	if(!end || (end > segmentStart && start < segmentEnd)){
 		if (pts.length > limit) {
-		    plot_this_pointlist(pts, map, lw, colors[i % n], start, end, segmentStart);
+		    plot_this_pointlist(pts, map, lw, colour, start, end, segmentStart);
 		}
 		
 		//~ if(end){
