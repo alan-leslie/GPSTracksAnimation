@@ -199,8 +199,8 @@ comment) -->
 		zoom = 5;
 		var timeout_id = 0;
 
-		if(!isSetup || goingBackwards){
-			clear_map();
+		if(!isSetup || goingBackwards || showIncrement){		
+		       clear_map();
 			
 			if(goingBackwards){
 			goingBackwards = false;
@@ -455,8 +455,13 @@ comment) -->
 			        if($("#playPause").attr("class") == "pause"){
 				    $("#playPause").click();
 				}
+				var prevEnd = end;
 			        var sliderValue = ui.value;
 				end = (longestTimeOffset * ui.value) / 100;
+				
+				if(prevEnd && prevEnd > end){
+				    goingBackwards = true;
+				    }
 				if(start > end){
 					if(showIncrement === true){
 						start =  (longestTimeOffset * (ui.value - 1.0)) / 100;
@@ -482,7 +487,7 @@ comment) -->
 			if (speed_mult == 0){
 			    end = longestTimeOffset;
 			    $( "#slider" ).slider("value", 100.0);
-			    // todo - set the elapsed time value
+			    set_elapsed_time_display();
 			    $(this).attr("class", "play");
 			}
 			// if this is a display 
@@ -585,9 +590,6 @@ comment) -->
                 <p>Select display type:</p>
 <Input type = radio Name = r1 Value = "Full" id="FullTrackButton" checked=true>Full track
 <Input type = radio Name = r1 Value = "Increment" id="IncrementButton">Increment
-
-<!-- if (document.f1.r1[i].checked)
-chosen = document.f1.r1[i].value -->
 
                 <p>Add GPS tracks to the list below.
 		Animation/plotting will start/stop when you press the play/pause button.</p>
