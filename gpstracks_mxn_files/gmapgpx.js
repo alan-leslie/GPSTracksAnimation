@@ -67,8 +67,7 @@ var GPSTrack = function (theFileName, theColour, onLoadValidFunction, onLoadErro
         var self = this;
         self.fileName = theFileName;
         self.colour = theColour;
-        // TODO - get colour - generate f rom md5??
-        // and use it in the display
+
         self.isFetched = false;
 	self.onLoadValid = onLoadValidFunction;
 	self.onLoadError = onLoadErrorFunction;
@@ -91,14 +90,17 @@ GPSTrack.prototype.fetch = function (cback, err) {
     //~ .fail(f_error);
     //~ fetch_gpx(this.fileName, function(gpx, self){cback(gpx, self);}, err);
     var req_cache = new ReqCache();
+	
+    var theUrl = self.fileName;
+	
 	// todo - sort the open street map stuff
-	    //~ if(url.indexOf("openstreetmap") !== -1){
-		  //~ var splitUrl = url.split("/");
-		  //~ var trackIdNumber =  splitUrl[splitUrl.length -1];
-		  //~ url = "http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D%22http%3A%2F%2Fwww.openstreetmap.org%2Ftrace%2F" + trackIdNumber + "%2Fdata%22";
-	    //~ }
+	    if(theUrl.indexOf("openstreetmap") !== -1){
+		  var splitUrl = theUrl.split("/");
+		  var trackIdNumber =  splitUrl[splitUrl.length -1];
+		  theUrl = "http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D%22http%3A%2F%2Fwww.openstreetmap.org%2Ftrace%2F" + trackIdNumber + "%2Fdata%22";
+	    }
 	// change this so that the complete add is called
-    fetch_gpx(req_cache, this.fileName, self, this.setup.bind(this), err);
+    fetch_gpx(req_cache, theUrl, self, this.setup.bind(this), err);
     this.isFetched = true; // this is just an indicator that the ajax call 
     // has been made, not that it is complete yet
     return this.isFetched;

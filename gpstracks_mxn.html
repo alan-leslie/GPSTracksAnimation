@@ -126,8 +126,22 @@ comment) -->
 
                 map.setMapType(mxn.Mapstraction.ROAD);
 
-                var tracksShown = false;
+        if(window.location.search) {
+            // Was a file specified?
+            var params = window.location.search.slice(1).split("&");
+            var vals = new Array(params.length);
+            for(var i = 0;i < params.length;i++) {
+                var item = params[i].split("=");
+                vals[item[0]] = item[1];
+            }
 
+            if(vals["file"]) {
+		addNewListItem(vals["file"]);
+            }
+	}
+	
+	        var tracksShown = false;
+		
                 if (!tracksShown) {
                     // display the map centered on a latitude and longitude
                     var startpt = new mxn.LatLonPoint(35, -95);
@@ -137,6 +151,9 @@ comment) -->
             }
 
             function set_speed_mult(val) {
+		if($("#playPause").attr("class") == "pause"){
+		    $("#playPause").click();
+		}
                 speed_mult = val;
             }
 	    
@@ -190,12 +207,6 @@ comment) -->
 			}
 		}
 		
-		if($('#IncrementButton').attr('checked') == "undefined"){
-			showIncrement = false;
-		} else { 
-			showIncrement = $('#IncrementButton').attr('checked') == "checked";
-		}
-
                 // Setup function to center and zoom the map appropriately
                 // to display the tracks
 		// precon - if there are tracks that they are valid
@@ -261,12 +272,13 @@ comment) -->
 				map.removeAllPolylines();
 				}
 		      f_display();
+		      set_elapsed_time_display();
 		      
 		      if(end < longestTimeOffset){
 		      var noOfIncrements = 0.0;
 		      if(end < 2.0){
 		          end = 0.0;
-			  //~ start = 0.0;
+			  start = 0.0;
 			  noOfIncrements = 0;
 			  } else {
 			      noOfIncrements = end / sliderTimeIncrement;
@@ -369,8 +381,16 @@ comment) -->
 		var listBox = document.getElementById('lsbox');
 
                 var listBoxItem = document.createElement("option");
+		
+		var displayText = theTrack.fileName;
+		if(displayText.indexOf("openstreetmap") !== -1){
+			var splitUrl = itemValue.value.split("/");
+			var trackIdNumber =  splitUrl[splitUrl.length -1];
+			displayText = "OSM-" + trackIdNumber;
+		} 
+		
                 listBoxItem.value = theTrack.fileName;
-                listBoxItem.text = theTrack.fileName;
+                listBoxItem.text = displayText;
                 listBox.add(listBoxItem, null);	  
 
                 isSetup = false;
@@ -381,9 +401,13 @@ comment) -->
 	    // todo just move this as an alert to GPSTrack
 	    }
 
-            function addNewListItem() {
+            function addNewListItem(newItem) {
 		var listBox = document.getElementById('lsbox');
                 var itemValue = document.getElementById('txtValue');
+		if(newItem){
+		    itemValue.value = newItem;
+		    itemValue.text = newItem;
+		}
 
                 if (itemValue.value == '') {
                     alert('please enter option value');
@@ -434,7 +458,11 @@ comment) -->
 			        var sliderValue = ui.value;
 				end = (longestTimeOffset * ui.value) / 100;
 				if(start > end){
-					start = 0.0;
+					if(showIncrement === true){
+						start =  (longestTimeOffset * (ui.value - 1.0)) / 100;
+					} else {
+						start = 0.0;
+					}
 					goingBackwards = true;
 				}
 				set_elapsed_time_display();
@@ -474,6 +502,22 @@ comment) -->
 			}
                    reset();
 		   set_elapsed_time_display();
+                });
+		$('#IncrementButton').bind("click", function () {
+			if(!showIncrement){
+			        if($("#playPause").attr("class") == "pause"){
+				    $("#playPause").click();
+				}
+			} 
+			showIncrement = true;
+                });
+		$('#FullTrackButton').bind("click", function () {
+			if(showIncrement){
+			        if($("#playPause").attr("class") == "pause"){
+				    $("#playPause").click();
+				}
+			} 
+			showIncrement = false;
                 });
             });
         </script>
