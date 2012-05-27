@@ -42,14 +42,26 @@ if (typeof Object.create !== 'function') {
 var GPSTrackPoint = function (thePoint, startDateTime) {
         this.latitude = parseFloat(thePoint.getAttribute("lat"));
         this.longitude = parseFloat(thePoint.getAttribute("lon"));
-        this.time = gpx_datetime(gpxGetElements(thePoint, "time")[0].firstChild.nodeValue);
+	
+	var timeElement = gpxGetElements(thePoint, "time");
+	this.time = 0.0;
+	
+	if (timeElement.length && timeElement.length > 0) {
+		this.time =  gpx_datetime(timeElement[0].firstChild.nodeValue);	
+        }
+	
 	if(startDateTime === null){
 		this.timeOffset = 0.0;
 	} else {
 		this.timeOffset = this.time.valueOf() - startDateTime.valueOf();
 	}
-        var node = gpxGetElements(thePoint, "ele")[0];
-        this.elevation = parseFloat(node.firstChild.nodeValue);
+	
+        var elementArray = gpxGetElements(thePoint, "ele");
+	this.elevation = 0.0;
+	
+	if (typeof elementArray === "object") {
+		this.elevation = parseFloat(elementArray[0].firstChild.nodeValue);
+	}
     };
 
 var GPSTrackSegment = function (pts, startDateTime, prevSegmentEnd) {
@@ -93,21 +105,18 @@ GPSTrack.prototype.fetch = function (cback, err) {
 	
     var theUrl = self.fileName;
 	
-	// todo - sort the open street map stuff
 	    if(theUrl.indexOf("openstreetmap") !== -1){
 		  var splitUrl = theUrl.split("/");
 		  var trackIdNumber =  splitUrl[splitUrl.length -1];
 		  theUrl = "http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D%22http%3A%2F%2Fwww.openstreetmap.org%2Ftrace%2F" + trackIdNumber + "%2Fdata%22";
 	    }
-	// change this so that the complete add is called
+
     fetch_gpx(req_cache, theUrl, self, this.setup.bind(this), err);
-    this.isFetched = true; // this is just an indicator that the ajax call 
-    // has been made, not that it is complete yet
+    this.isFetched = true; // this is useless I think 
     return this.isFetched;
 };
 
 GPSTrack.prototype.setup = function (gpx) {
-    // var self = this;
     var theXMLSegments = gpxGetElements(gpx, "trkseg");
     var segsLength = theXMLSegments.length;
     var isValid = false;
@@ -123,8 +132,14 @@ GPSTrack.prototype.setup = function (gpx) {
 		}
 	}
 	
-	var segmentStartDateTime =  gpx_datetime(gpxGetElements(pts[0], "time")[0].firstChild.nodeValue);	
-        var theSegment = new GPSTrackSegment(pts, segmentStartDateTime, previousSegmentEnd);
+	var timeElement = gpxGetElements(pts[0], "time");
+	var segmentStartDateTime = 0.0;
+
+	if (timeElement.length && timeElement.length > 0) {
+		segmentStartDateTime =  gpx_datetime(timeElement[0].firstChild.nodeValue);	
+        } 
+	
+	var theSegment = new GPSTrackSegment(pts, segmentStartDateTime, previousSegmentEnd);
 	var segmentEnd = theSegment.points[ptsLength - 1].timeOffset
         this.theSegments.push(theSegment);
 	
@@ -191,35 +206,33 @@ GPSTrack.prototype.getBoundsFromSegments = function () {
     return theBounds;
 };
 
-GPSTrack.prototype.animate = function (map, colors, speed_mult, maxZ) {
-    var fcancel;
-    var segs = this.theSegments;
-    var segLength = segs.length;
-    var segnum = 0;
-    var n = colors.length;
+//~ GPSTrack.prototype.animate = function (map, colors, speed_mult, maxZ) {
+    //~ var fcancel;
+    //~ var segs = this.theSegments;
+    //~ var segLength = segs.length;
+    //~ var segnum = 0;
+    //~ var n = colors.length;
 
-    function animation() {
-        fcancel = animate_this_segment(segs[segnum], map, {
-            'scale': speed_mult,
-            'skip': 2,
-            'color': colors[segnum % n],
-   	    'zcolor': maxZ,
-            'fdone': function () {
-                segnum++;
-                if (segnum < segs.length) animation();
+    //~ function animation() {
+        //~ fcancel = animate_this_segment(segs[segnum], map, {
+            //~ 'scale': speed_mult,
+            //~ 'skip': 2,
+            //~ 'color': colors[segnum % n],
+   	    //~ 'zcolor': maxZ,
+            //~ 'fdone': function () {
+                //~ segnum++;
+                //~ if (segnum < segs.length) animation();
                 //~ else alert("Animation done");
-            }
-        });
-    }
+            //~ }
+        //~ });
+    //~ }
 
-    animation();
-    return fcancel;
-};
+    //~ animation();
+    //~ return fcancel;
+//~ };
 
-// TODO - add a time interval to display
 GPSTrack.prototype.display = function (map, colors, start, end, icon) {
-	// TODO - check that the segments are in the time range
-    plot_these_segments(map, 3, this.theColour, 3, this.theSegments, start, end);
+    plot_these_segments(map, 3, this.colour, 3, this.theSegments, start, end);
     plot_points(this.theWayPoints, map, icon);
 };
 
@@ -349,17 +362,24 @@ function plot_this_pointlist(pts, map, lw, lineColor, start, end, thisSegmentSta
 
     //~ var polyPts = [];
 	if(!start) start = 0.0;
+	var thePoints = new Array();
 
-	// TODO - need to include prev an next points???
-    for (var i = 1; i < pts.length; i++) {
+    for (var i = 0; i < pts.length; i++) {
 	     var theTimeOffset = thisSegmentStart + pts[i].timeOffset;
+	    if(end !== 0.0){
 	     if(!end || (theTimeOffset > start && theTimeOffset < end)){
 		     var thePoint = new mxn.LatLonPoint(pts[i].latitude, pts[i].longitude);
-		     var prevPoint = new mxn.LatLonPoint(pts[i - 1].latitude, pts[i -1].longitude);
+		     //~ var prevPoint = new mxn.LatLonPoint(pts[i - 1].latitude, pts[i -1].longitude);
 
-		    showPoint(thePoint, prevPoint, lineColor);
+		    //~ showPoint(thePoint, prevPoint, lineColor);
+		     thePoints.push(thePoint);		     
 	     }
+     }
         //~ polyPts.push(new mxn.LatLonPoint(pts[i].latitude, pts[i].longitude));
+    }
+    
+    if(thePoints.length > 1){
+	    showPoints(thePoints, lineColor);
     }
 
     //~ var poly = new mxn.Polyline(polyPts);
@@ -413,24 +433,20 @@ function plot_these_segments(map, lw, colour, limit, segs, start, end) {
     if (!limit) limit = 2;
     if (!start) start = 0.0;
 
-    //~ var n = colors.length;
-
     for (var i = 0; i < segs.length; ++i) {
 	var pts = segs[i].points; 
 	var ptsLength = pts.length;
 	var lastTimeOffset =  pts[ptsLength -1].timeOffset;
 	var segmentStart = segs[i].prevSegmentEndOffset;
 	var segmentEnd = segmentStart + lastTimeOffset;
-	    
+	
+         if(end !== 0.0){	    
 	if(!end || (end > segmentStart && start < segmentEnd)){
 		if (pts.length > limit) {
 		    plot_this_pointlist(pts, map, lw, colour, start, end, segmentStart);
 		}
-		
-		//~ if(end){
-			//~ end = end - lastTimeOffset;
-		//~ }
         }
+}
     }
 }
 /**
@@ -523,12 +539,12 @@ function plot_pointlist(pts, map, lw, lineColor) {
  *                    cancel the animation.
  */
                      //map.addOverlay(new GPolyline([lastpt, pt], color, 3, 0.9));
- function showPoint(thePoint, prevPoint, color){
-	var polyPts = [];
-	    polyPts.push(prevPoint);
-	    polyPts.push(thePoint);
+ function showPoints(thePoints, color){
+	//~ var polyPts = [];
+	    //~ polyPts.push(prevPoint);
+	    //~ polyPts.push(thePoint);
 
-	    var poly = new mxn.Polyline(polyPts);
+	    var poly = new mxn.Polyline(thePoints);
 
 	    //~ placemark = new Polyline(points);
 	    poly.addData({
@@ -543,29 +559,29 @@ function plot_pointlist(pts, map, lw, lineColor) {
 	    map.addPolyline(poly);
  }
  
-function animate_this_segment(seg, map, desc) {
-    var scale = desc.scale || 1;
-    var skip = desc.skip || 0;
-    var color = desc.color || "#ff0000";
-    var fstep = desc.fstep;
-    var fdone = desc.fdone;
-    var npan = desc.npan || 4;
-    var zcolor = desc.zcolor || 0;
+//~ function animate_this_segment(seg, map, desc) {
+    //~ var scale = desc.scale || 1;
+    //~ var skip = desc.skip || 0;
+    //~ var color = desc.color || "#ff0000";
+    //~ var fstep = desc.fstep;
+    //~ var fdone = desc.fdone;
+    //~ var npan = desc.npan || 4;
+    //~ var zcolor = desc.zcolor || 0;
 
     // Package-up a function and some state variables. The function
     // updates the map to show the current trackpoint and returns
     // the number of milliseconds until the next trackpoint is reached.
-    function make_handler() {
-        var pts = seg.points; //gpxGetElements(seg, "trkpt");
-        var ptsLength = pts.length;
-        var ptnum = skip;
-        var lastpt = null;
-        var nextT = null;
-        var redraw = function () {
-                try {
+    //~ function make_handler() {
+        //~ var pts = seg.points; //gpxGetElements(seg, "trkpt");
+        //~ var ptsLength = pts.length;
+        //~ var ptnum = skip;
+        //~ var lastpt = null;
+        //~ var nextT = null;
+        //~ var redraw = function () {
+                //~ try {
                     //~ pt = new GPoint(parseFloat(pts[ptnum].getAttribute("lon")),
                     //~ parseFloat(pts[ptnum].getAttribute("lat")));
-                    pt = new mxn.LatLonPoint(pts[ptnum].latitude, pts[ptnum].longitude);
+                    //~ pt = new mxn.LatLonPoint(pts[ptnum].latitude, pts[ptnum].longitude);
                     //~ if(zcolor) {
                     //~ var node = gpxGetElements(pts[ptnum], "ele")[0];
                     //~ var elev = parseFloat(node.firstChild.nodeValue);
@@ -577,23 +593,23 @@ function animate_this_segment(seg, map, desc) {
                     //~ var rgb = hsv2rgb(z*359, 0.9, 0.9);
                     //~ color = rgb.toString();
                     //~ }
-                } catch (e) {
-                    return 0;
-                }
+                //~ } catch (e) {
+                    //~ return 0;
+                //~ }
 
-                var T;
-                if (nextT) {
-                    T = nextT;
-                } else {
+                //~ var T;
+                //~ if (nextT) {
+                    //~ T = nextT;
+                //~ } else {
                     //~ T = gpx_datetime(gpxGetElements(pts[ptnum], "time")[0].firstChild.nodeValue);
-                    T = pts[ptnum].time;
-                }
+                    //~ T = pts[ptnum].time;
+                //~ }
 
                 // TODO - recenter map?
                 //~ if((ptnum%npan) == 0)
                 //~ map.recenterOrPanToLatLng(pt);
-                if (lastpt) {
-			showPoint(pt, lastpt, color);
+                //~ if (lastpt) {
+			//~ showPoint(pt, lastpt, color);
                     //map.addOverlay(new GPolyline([lastpt, pt], color, 3, 0.9));
                     //~ var polyPts = [];
                     //~ polyPts.push(lastpt);
@@ -616,43 +632,43 @@ function animate_this_segment(seg, map, desc) {
                     // 	var point = new GLatLng(pt.lat, pt.lon); //you need a lat lng for the marker
                     //    map.addOverlay(new GMarker(point, {icon:beericon})); // takes the vars from beericon and the lat lng from point and pushes it to the map
                     // map.addOverlay(new GMarker(point)); // takes the vars from beericon and the lat lng from point and pushes it to the map
-                    if (fstep) fstep(T, lastpt, pt);
-                }
+                    //~ if (fstep) fstep(T, lastpt, pt);
+                //~ }
 
-                ptnum++;
-                lastpt = pt;
+                //~ ptnum++;
+                //~ lastpt = pt;
 
-                if (ptnum >= pts.length) {
-                    return 0;
-                } else {
-                    nextT = pts[ptnum].time;
+                //~ if (ptnum >= pts.length) {
+                    //~ return 0;
+                //~ } else {
+                    //~ nextT = pts[ptnum].time;
                     //~ nextT = gpx_datetime(gpxGetElements(pts[ptnum], "time")[0].firstChild.nodeValue);
-                    return nextT.valueOf() - T.valueOf();
-                }
-            }
+                    //~ return nextT.valueOf() - T.valueOf();
+                //~ }
+            //~ }
 
-        return redraw;
-    }
+        //~ return redraw;
+    //~ }
 
 
-    var handler = make_handler();
-    var timeout_id = null;
+    //~ var handler = make_handler();
+    //~ var timeout_id = null;
 
     // Schedule the redraws with a scaled time interval.
-    function go() {
-        var dt = handler();
-        if (dt > 0) timeout_id = setTimeout(go, dt / scale);
-        else if (fdone) setTimeout(fdone, 500);
-    }
+    //~ function go() {
+        //~ var dt = handler();
+        //~ if (dt > 0) timeout_id = setTimeout(go, dt / scale);
+        //~ else if (fdone) setTimeout(fdone, 500);
+    //~ }
 
-    go();
+    //~ go();
 
-    // Return a function which can be used to stop the animation
-    return function () {
-        clearTimeout(timeout_id);
-        alert("Animation canceled");
-    };
-}
+    //~ // Return a function which can be used to stop the animation
+    //~ return function () {
+        //~ clearTimeout(timeout_id);
+        //~ alert("Animation canceled");
+    //~ };
+//~ }
 
 
 /**

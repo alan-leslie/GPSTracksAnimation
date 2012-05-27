@@ -53,8 +53,20 @@ comment) -->
                 text-align: center;
                 font-family: Helvetica, Arial, sans-serif;
             }
+	    #source_code {
+                font-size: 80%;
+                font-family: Helvetica, Arial, sans-serif;
+            }
             #intro {
                 height: 250px;
+                font-size: 80%;
+                font-family: Helvetica, Arial, sans-serif;
+            }
+	   #amount {
+                font-size: 80%;
+                font-family: Helvetica, Arial, sans-serif;
+            }
+	    #amount_label{
                 font-size: 80%;
                 font-family: Helvetica, Arial, sans-serif;
             }
@@ -165,7 +177,8 @@ comment) -->
 	    function get_available_colour(trackIndex) {
 		var colors = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#00ffff", "#ff00ff", "#000000", "#ffffff"];
 		var n = colors.length;
-		return colors[trackIndex % n];
+		var colourIndex = trackIndex % n;
+		return colors[colourIndex];
             }
 	    
 	    function reset() {
@@ -268,9 +281,9 @@ comment) -->
                     };
 		    
 		var animateTracks = function () {
-		        if(showIncrement === true){
+		        //~ if(showIncrement === true){
 				map.removeAllPolylines();
-				}
+				//~ }
 		      f_display();
 		      set_elapsed_time_display();
 		      
@@ -304,9 +317,13 @@ comment) -->
                 // Display the tracks.
                 var f_display = function () {
                         var tracksLength = tracks.length;
+			var displayStart = start;
+			if(!showIncrement){
+			    displayStart = 0.0;
+			}
 
                         for (var i = 0; i < tracksLength; ++i) {
-                            tracks[i].display(map, colors, start, end);
+                            tracks[i].display(map, colors, displayStart, end);
                         }
                     };
 
@@ -384,7 +401,7 @@ comment) -->
 		
 		var displayText = theTrack.fileName;
 		if(displayText.indexOf("openstreetmap") !== -1){
-			var splitUrl = itemValue.value.split("/");
+			var splitUrl = displayText.split("/");
 			var trackIdNumber =  splitUrl[splitUrl.length -1];
 			displayText = "OSM-" + trackIdNumber;
 		} 
@@ -531,22 +548,21 @@ comment) -->
     <body onload="initialize()">
         <div id="intro">
             <h2 id="title">GPS Track Plotting/Animation Demo</h2>
-            <p>This page uses Google's new
-                <a href="http://maps.google.com/apis/maps/documentation/">Mapping API</a>to plot and optionally animate various GPS tracks. Each example track
-                is stored in a
-                <a href="http://www.topografix.com/gpx.asp">GPX-format</a>XML file.</p>
+            <p>This page shows <a href="http://www.topografix.com/gpx.asp">GPX-format</a> Tracks on a map. 
+	    To begin add some tracks to the list.
+	    if you want to use an <a href="http://www.openstreetmap.org/traces">Openstreetmap</a> track you can just paste in the URL (e.g. http://www.openstreetmap.org/user/laser%20jock/traces/1232838).
+	    </p>
+
+            <h3 class="subhead">Plotting</h3>
+	    <p>If you want to view the whole track(s) just hit the play button. 
+	    You can also use the slider (by clicking on it or by using the left and right arrow keys) to show parts of the tracks.
+	    </p>
+	    
             <h3 class="subhead">Animation</h3>
-            <p>The animation update interval is determined by the time between trackpoints.
-                You can play the animation in real-time (this can be rather slow) or some
-                multiple thereof. There is also the option of elevation dependent coloring
-                for each trackpoint interval. The color range is a linear progression in
-                <a
-                href="http://gug.sunsite.dk/docs/Grokking-the-GIMP-v1.0/node51.html">hue</a>(i.e. around the color wheel) from zero to the specified maximum
-                    elevation.</p>
-            <h3 class="subhead">Source code</h3>
-            <p>The GPX handling is provided by the functions in
-                <a href="http://home.mindspring.com/%7Emfkenney/gmapgpx.js">gmapgpx.js</a>and the color conversion is done in
-                <a href="http://home.mindspring.com/%7Emfkenney/colors.js">colors.js</a>.</p>
+            <p>To show the tracks as an animation, select the speed you want (you can play the animation in real time but this may be slow).
+	    Again you can use the slider but this will pause the animation.
+	    The time interval used for each animation increment is on hundedth of the total time.
+	    </p>
         </div>
 
 	<table id="map_table">
@@ -566,7 +582,7 @@ comment) -->
                 </tr>
 		<tr>
 		<td>
-	          <label for="amount">Elapsed time (1% increments):</label>
+	          <label id="amount_label" for="amount">Elapsed time (1% increments):</label>
 	           <input type="text" id="amount" style="border:0; color:#f6931f; font-weight:bold;" />
 		   </td>
 		</tr>
@@ -618,6 +634,13 @@ comment) -->
                     </tr>
         </table>
             </div>
+
+        <div id="source_code">
+	                <h3 class="subhead">Source</h3>
+            <p>The original GPX handling code is from <a href="http://home.mindspring.com/%7Emfkenney/gpstracks.html">Mike Kenney's site</a>.
+	    The code has been changed: to use a map abstraction layer; to use a GPSTrack object and to allow multiple gpx files to be added.
+	   </p>
+	   </div>
     </body>
 
 </html>
