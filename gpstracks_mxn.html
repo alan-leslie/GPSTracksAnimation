@@ -5,7 +5,7 @@ comment) -->
     
     <head>
         <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
-        <title>Gmap GPS Track Plotting</title>
+        <title>GPS Track Plotting/Animation</title>
         <link rel="stylesheet" href="http://code.jquery.com/ui/1.8.20/themes/base/jquery-ui.css"
         type="text/css" media="all" />
         <link rel="stylesheet" href="http://static.jquery.com/ui/css/demo-docs-theme/ui.theme.css"
@@ -18,11 +18,10 @@ comment) -->
         type="text/javascript"></script>
         <script src="http://jquery-ui.googlecode.com/svn/tags/latest/ui/minified/i18n/jquery-ui-i18n.min.js"
         type="text/javascript"></script>
-        <script type="text/javascript" src="http://openlayers.org/api/OpenLayers.js"></script>
-        <!-- <script type="text/javascript" src="http://timemap.googlecode.com/svn/tags/2.0.1/lib/mxn/mxn.js?(openlayers)"></script>-->
-        <script type="text/javascript" src="./timemap/lib/mxn/mxn.js?(openlayers)"></script>
+        <script type="text/javascript" src="http://openlayers.org/api/OpenLayers.js"></script> 
+        <script type="text/javascript" src="http://timemap.googlecode.com/svn/tags/2.0.1/lib/mxn/mxn.js?(openlayers)"></script> 
         <script src="gpstracks_mxn_files/reqcache.js" type="text/javascript"></script>
-        <script src="gpstracks_mxn_files/gmapgpx.js" type="text/javascript"></script>
+        <script src="gpstracks_mxn_files/mapgpx.js" type="text/javascript"></script>
         <script src="gpstracks_mxn_files/geo.js" type="text/javascript"></script>
         <script src="gpstracks_mxn_files/colors.js" type="text/javascript"></script>
         <style type="text/css">
@@ -119,6 +118,7 @@ comment) -->
 	    var sliderTimeIncrement = 0.0;
 	    var goingBackwards = false;
 	    var showIncrement = false;
+	    var forceDisplay = false;
 
             function initialize() {
                 // Start with animation disabled
@@ -283,6 +283,10 @@ comment) -->
 		var animateTracks = function () {
 		        //~ if(showIncrement === true){
 				map.removeAllPolylines();
+				//~ Components.utils.forceGC();
+				//~ window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+  //~ .getInterface(Components.interfaces.nsIDOMWindowUtils)
+  //~ .garbageCollect();
 				//~ }
 		      f_display();
 		      set_elapsed_time_display();
@@ -323,8 +327,12 @@ comment) -->
 			}
 
                         for (var i = 0; i < tracksLength; ++i) {
-                            tracks[i].display(map, colors, displayStart, end);
+                            tracks[i].display(map, forceDisplay, displayStart, end);
                         }
+			
+			if(forceDisplay){
+				forceDisplay = false;
+			}
                     };
 
                 if (speed_mult == 0 || $("#playPause").attr("class") == "play") {
@@ -499,17 +507,16 @@ comment) -->
             $(document).ready(function () {
                 $('#playPause').bind("click", function () {
                     if ($(this).attr("class") == "play"){
-		    //todo - add a time to showtracks so that it knows where it was paused
 		        $(this).attr("class", "pause");
 			if (speed_mult == 0){
 			    end = longestTimeOffset;
 			    $( "#slider" ).slider("value", 100.0);
 			    set_elapsed_time_display();
 			    $(this).attr("class", "play");
+			    if(end === 0.0 && longestTimeOffset === 0.0){
+				forceDisplay = true;
+			    }
 			}
-			// if this is a display 
-			// change end to largest offset
-			// move slider to end
 			showtracks();
                    } else {
 			if(fcancel){
@@ -641,6 +648,12 @@ comment) -->
 	    The code has been changed: to use a map abstraction layer; to use a GPSTrack object and to allow multiple gpx files to be added.
 	   </p>
 	   </div>
+	   <p>
+	<a href="./AlsMaps.html">
+	More Maps</a>
+	<a href="mailto:alan_leslie@ymail.com?Subject=GPS tracks">
+	Send Mail</a>
+	</p>
     </body>
 
 </html>
