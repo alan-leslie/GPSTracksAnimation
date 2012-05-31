@@ -123,7 +123,7 @@ GPSTrack.prototype.setup = function (gpx) {
     var theXMLSegments = gpxGetElements(gpx, "trkseg");
     var segsLength = theXMLSegments.length;
     var isValid = false;
-	var previousSegmentEnd = 0.0;
+    var previousSegmentEnd = 0.0;
 	
     for (var i = 0; i < segsLength; ++i) {
         var pts = gpxGetElements(theXMLSegments[i], "trkpt");
@@ -135,25 +135,23 @@ GPSTrack.prototype.setup = function (gpx) {
 		}
 	}
 	
-	var timeElement = gpxGetElements(pts[0], "time");
-	var segmentStartDateTime = 0.0;
+	if(ptsLength > 0){
+		var timeElement =  gpxGetElements(pts[0], "time");
+		var segmentStartDateTime = 0.0;
 
-	if (timeElement.length && timeElement.length > 0) {
-		segmentStartDateTime =  gpx_datetime(timeElement[0].firstChild.nodeValue);	
-        } 
-	
-	var theSegment = new GPSTrackSegment(pts, segmentStartDateTime, previousSegmentEnd);
-	var segmentEnd = theSegment.points[ptsLength - 1].timeOffset
-        this.theSegments.push(theSegment);
-	
-	var pointsLength = theSegment.points.length;
-	if(pointsLength > 0){
+		if (timeElement.length && timeElement.length > 0) {
+			segmentStartDateTime =  gpx_datetime(timeElement[0].firstChild.nodeValue);	
+		} 
+		
+		var theSegment = new GPSTrackSegment(pts, segmentStartDateTime, previousSegmentEnd);
+		var segmentEnd = theSegment.points[ptsLength - 1].timeOffset
+		this.theSegments.push(theSegment);
+		
 		this.elapsedTime = this.elapsedTime + segmentEnd;
+		previousSegmentEnd = previousSegmentEnd + segmentEnd;
 	}
-	
-	previousSegmentEnd = previousSegmentEnd + segmentEnd;
     }
-    
+	
     if(isValid){
  	    if(this.onLoadValid){
 		    this.onLoadValid(this);
@@ -268,6 +266,8 @@ function fetch_gpx(req_cache, url, callbackObject, cback, err) {
                             doc = $.parseXML(resp); 
                         // Try to find the GPX namespace prefix (IE sucks)
 			var gpxElements = doc.getElementsByTagName("gpx");
+			    
+			if(gpxElements){
 			var gpxLength = gpxElements.length;
                         //~ var attrs = doc.documentElement.attributes;
                         var attrs = gpxElements[0].attributes;
@@ -289,6 +289,7 @@ function fetch_gpx(req_cache, url, callbackObject, cback, err) {
                                     gpx_ns_prefix = name.substr(6) + ":";
                             }
                         }
+		}
 
                         return doc;
                     });
