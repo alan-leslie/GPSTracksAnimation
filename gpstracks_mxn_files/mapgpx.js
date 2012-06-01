@@ -270,6 +270,9 @@ function fetch_gpx(req_cache, url, callbackObject, cback, err) {
 			if(gpxElements){
 			var gpxLength = gpxElements.length;
                         //~ var attrs = doc.documentElement.attributes;
+				if(!gpxElements[0]){
+					alert("Error: No GPX found");
+				}
                         var attrs = gpxElements[0].attributes;
 			    for(var i = 0;i < attrs.length;i++) {
                             if(attrs[i].nodeValue == gpx_ns1) {

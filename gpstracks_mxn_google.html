@@ -18,8 +18,10 @@ comment) -->
         type="text/javascript"></script>
         <script src="http://jquery-ui.googlecode.com/svn/tags/latest/ui/minified/i18n/jquery-ui-i18n.min.js"
         type="text/javascript"></script>
-        <script type="text/javascript" src="http://openlayers.org/api/OpenLayers.js"></script> 
-        <script type="text/javascript" src="http://timemap.googlecode.com/svn/tags/2.0.1/lib/mxn/mxn.js?(openlayers)"></script> 
+	<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyDdfZ991xmwxK_3DfPpFROX20AtvRiCKtQ&sensor=false"></script>	
+        <script type="text/javascript" src="http://timemap.googlecode.com/svn/tags/2.0.1/lib/mxn/mxn.js?(googlev3)"></script>	
+ <!--       <script type="text/javascript" src="http://openlayers.org/api/OpenLayers.js"></script> 
+        <script type="text/javascript" src="http://timemap.googlecode.com/svn/tags/2.0.1/lib/mxn/mxn.js?(openlayers)"></script> -->
         <script src="gpstracks_mxn_files/reqcache.js" type="text/javascript"></script>
         <script src="gpstracks_mxn_files/mapgpx.js" type="text/javascript"></script>
         <script src="gpstracks_mxn_files/geo.js" type="text/javascript"></script>
@@ -127,7 +129,8 @@ comment) -->
                 speed_mult = 0;
                 maxZ = 0;
 
-                map = new mxn.Mapstraction(document.getElementById("map_ol"), "openlayers", true);
+                map = new mxn.Mapstraction(document.getElementById("map_ol"), "googlev3", true);
+               //~ map = new mxn.Mapstraction(document.getElementById("map_ol"), "openlayers", true);
 
                 // set default controls and map type
                 map.addControls({
@@ -393,7 +396,7 @@ comment) -->
 			longestTimeOffset = Math.max(longestTimeOffset, tracks[k].elapsedTime);
 		}
 		
-		sliderTimeIncrement = longestTimeOffset / 100;	
+		sliderTimeIncrement = longestTimeOffset / 100;
 		
 		isSetup = false;
 		reset();
@@ -656,11 +659,11 @@ comment) -->
 	    The code has been changed: to use a map abstraction layer; to use a GPSTrack object and to allow multiple gpx files to be added.
 	   </p>
 	   </div>
-	<p>
-	<a href="./gpstracks_mxn_google.html">
-	Google Maps Version</a>
-	</p>
 	   <p>
+	<a href="./gpstracks_mxn.html">
+	Open Layers/Open Street Map Version</a>
+	</p>
+	<p>
 	<a href="./AlsMaps.html">
 	More Maps</a>
 	</p>
