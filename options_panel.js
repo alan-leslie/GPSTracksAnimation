@@ -1,4 +1,50 @@
-        // removes items from listBox identified by sourceID
+	function initOptionsPanel(){
+                $("#intro").dialog({
+                    autoOpen: false,
+                    modal: true,
+                    width: 450
+                });
+                $("#source_code").dialog({
+                    autoOpen: false,
+                    modal: true,
+                    width: 400
+                });
+                $("#add_empty").dialog({
+                    autoOpen: false,
+                    modal: true
+                });
+                $("#add_already_exists").dialog({
+                    autoOpen: false,
+                    modal: true
+                });
+                $("#no_gps_data").dialog({
+                    autoOpen: false,
+                    modal: true
+                });
+                $("#no_file").dialog({
+                    autoOpen: false,
+                    modal: true
+                });
+		
+		$('#IncrementButton').bind("click", function () {
+                    if (!showIncrement) {
+                        if ($("#playPauseButton").attr("class") == pauseClass) {
+                            $("#playPauseButton").click();
+                        }
+                    }
+                    showIncrement = true;
+                });
+                $('#FullTrackButton').bind("click", function () {
+                    if (showIncrement) {
+                        if ($("#playPauseButton").attr("class") == pauseClass) {
+                            $("#playPauseButton").click();
+                        }
+                    }
+                    showIncrement = false;
+                });
+	}
+	
+	// removes items from listBox identified by sourceID
         // assumes that multi select is possible
         function listbox_remove(sourceID) {
             var listBox = document.getElementById(sourceID);
@@ -116,6 +162,14 @@
             set_elapsed_time_display();
             $("#btnAddItem").attr("disabled", false);
         }
+	
+	function get_available_colour(trackIndex) {
+                var colors = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#00ffff", "#ff00ff", "#000000", "#ffffff"];
+                var n = colors.length;
+                var theColour = colors[colourIndex % n];
+                ++colourIndex;
+                return theColour;
+         }
 
         // get a colour that contrasts with the background colour
         function getForegroundColour(backgroundColour) {

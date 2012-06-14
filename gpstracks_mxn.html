@@ -32,7 +32,8 @@ comment) -->
         <script src="gpstracks_mxn_files/colors.js" type="text/javascript"></script>
 	<script type="text/javascript" src="./detectmobilebrowser.js"></script>
 	<script type="text/javascript" src="./options_panel.js"></script>
-
+	<script type="text/javascript" src="./control_panel.js"></script>
+	
         <script type="text/javascript">
             //<![CDATA[
             var map = null;
@@ -114,32 +115,12 @@ comment) -->
                 map.removeAllPolylines();
             }
 
-            function get_available_colour(trackIndex) {
-                var colors = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#00ffff", "#ff00ff", "#000000", "#ffffff"];
-                var n = colors.length;
-                var theColour = colors[colourIndex % n];
-                ++colourIndex;
-                return theColour;
-            }
-
             function reset() {
                 clear_map();
                 $("#playPauseButton").attr("class", playClass);
                 $("#playSlider").slider("value", 0.0);
                 start = 0.0;
                 end = 0.0;
-            }
-
-            function set_elapsed_time_display() {
-                var currentPos = 0.0;
-                if (end) {
-                    currentPos = end;
-                }
-
-                var displayValue = currentPos / 1000;
-                var displayOffset = longestTimeOffset / 1000;
-                var displayText = displayValue + "/" + displayOffset;
-                $("#amount").val(displayText);
             }
 
             // Display all of the tracks from a GPX file at the specified
@@ -285,32 +266,7 @@ comment) -->
             }
 
             $(document).ready(function () {
-                $("#intro").dialog({
-                    autoOpen: false,
-                    modal: true,
-                    width: 450
-                });
-                $("#source_code").dialog({
-                    autoOpen: false,
-                    modal: true,
-                    width: 400
-                });
-                $("#add_empty").dialog({
-                    autoOpen: false,
-                    modal: true
-                });
-                $("#add_already_exists").dialog({
-                    autoOpen: false,
-                    modal: true
-                });
-                $("#no_gps_data").dialog({
-                    autoOpen: false,
-                    modal: true
-                });
-                $("#no_file").dialog({
-                    autoOpen: false,
-                    modal: true
-                });
+		initOptionsPanel();
                 initialize();
 
                 if ($.browser.mobile === true) {
@@ -325,85 +281,8 @@ comment) -->
                     $("#playSlider").css("margin-top", "7px");
                     $("#playSlider").css("font-size", "200%");
                 }
-
-                $("#playSlider").slider({
-                    value: 0,
-                    min: 0,
-                    max: 100,
-                    step: 1,
-                    slide: function (event, ui) {
-                        if ($("#playPauseButton").attr("class") == pauseClass) {
-                            $("#playPauseButton").click();
-                        }
-                        var prevEnd = end;
-                        var sliderValue = ui.value;
-                        end = (longestTimeOffset * ui.value) / 100;
-
-                        if (prevEnd && prevEnd > end) {
-                            goingBackwards = true;
-                        }
-                        if (start > end) {
-                            if (showIncrement === true) {
-                                start = (longestTimeOffset * (ui.value - 1.0)) / 100;
-                            } else {
-                                start = 0.0;
-                            }
-                            goingBackwards = true;
-                        }
-                        set_elapsed_time_display();
-                        showtracks();
-                        start = end;
-                    }
-                });
-                $("#amount").val($("#playSlider").slider("value"));
-                //~ $('#playSlider').attr('class', sliderClass);
-                $('#playPauseButton').bind("click", function () {
-                    if ($(this).attr("class") == playClass) {
-                        $(this).attr("class", pauseClass);
-                        if (speed_mult == 0) {
-                            end = longestTimeOffset;
-                            $("#playSlider").slider("value", 100.0);
-                            set_elapsed_time_display();
-                            $(this).attr("class", playClass);
-                            if (end === 0.0 && longestTimeOffset === 0.0) {
-                                forceDisplay = true;
-                            }
-                        }
-                        showtracks();
-                    } else {
-                        if (fcancel) {
-                            fcancel();
-                        }
-                        $(this).attr("class", playClass);
-                    }
-                });
-                $('#playPauseButton').attr('class', playClass);
-
-                $('#stopButton').bind("click", function () {
-                    if (fcancel) {
-                        fcancel();
-                    }
-                    reset();
-                    set_elapsed_time_display();
-                });
-                $('#stopButton').attr('class', stopClass);
-
-                $('#IncrementButton').bind("click", function () {
-                    if (!showIncrement) {
-                        if ($("#playPauseButton").attr("class") == pauseClass) {
-                            $("#playPauseButton").click();
-                        }
-                    }
-                    showIncrement = true;
-                });
-                $('#FullTrackButton').bind("click", function () {
-                    if (showIncrement) {
-                        if ($("#playPauseButton").attr("class") == pauseClass) {
-                            $("#playPauseButton").click();
-                        }
-                    }
-                    showIncrement = false;
-                });
+		
+		initControlPanel();
             });
 	//]]>
         </script>
