@@ -5,12 +5,16 @@ comment) -->
     
     <head>
         <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
-        <title>GPS Track Plotting/Animation</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>GPS Track Plotting/Animation</title>
         <link rel="stylesheet" href="http://code.jquery.com/ui/1.8.20/themes/base/jquery-ui.css"
         type="text/css" media="all" />
         <link rel="stylesheet" href="http://static.jquery.com/ui/css/demo-docs-theme/ui.theme.css"
         type="text/css" media="all" />
-        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"
+	<link rel="stylesheet" href="http://code.jquery.com/ui/1.8.21/themes/base/jquery-ui.css" type="text/css" media="all" />
+	<link rel="stylesheet" href="http://static.jquery.com/ui/css/demo-docs-theme/ui.theme.css" type="text/css" media="all" />
+	<link rel="stylesheet" href="./gpstracks.css" type="text/css"/>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"
         type="text/javascript"></script>
         <script src="http://code.jquery.com/ui/1.8.20/jquery-ui.min.js"
         type="text/javascript"></script>
@@ -18,107 +22,38 @@ comment) -->
         type="text/javascript"></script>
         <script src="http://jquery-ui.googlecode.com/svn/tags/latest/ui/minified/i18n/jquery-ui-i18n.min.js"
         type="text/javascript"></script>
+ <!--	<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyDdfZ991xmwxK_3DfPpFROX20AtvRiCKtQ&sensor=false"></script>	
+        <script type="text/javascript" src="http://timemap.googlecode.com/svn/tags/2.0.1/lib/mxn/mxn.js?(googlev3)"></script>	-->
         <script type="text/javascript" src="http://openlayers.org/api/OpenLayers.js"></script> 
         <script type="text/javascript" src="http://timemap.googlecode.com/svn/tags/2.0.1/lib/mxn/mxn.js?(openlayers)"></script> 
-        <script src="gpstracks_mxn_files/reqcache.js" type="text/javascript"></script>
-        <script src="gpstracks_mxn_files/mapgpx.js" type="text/javascript"></script>
+         <script src="gpstracks_mxn_files/reqcache.js" type="text/javascript"></script>
+        <script src="gpstracks_mxn_files/mmapgpx.js" type="text/javascript"></script>
         <script src="gpstracks_mxn_files/geo.js" type="text/javascript"></script>
         <script src="gpstracks_mxn_files/colors.js" type="text/javascript"></script>
-        <style type="text/css">
-            #slider {
-                border: 2px solid #000;
-		margin-left: 56px;
-            }
-	   #map_table {
-                width: 75%;
-            }
-            #map_ol {
-                height: 500px;
-                border: 2px solid #000;
-                margin-left: 10px;
-            }
-            #info {
-                position: absolute;
-                top: 300px;
-                right: 5px;
-                width: 200px;
-                font-size: 80%;
-                border: 1px solid #000;
-                padding-left: 1em;
-                padding-right: 1em;
-                font-family: Helvetica, Arial, sans-serif;
-            }
-            #title {
-                text-align: center;
-                font-family: Helvetica, Arial, sans-serif;
-            }
-	    #source_code {
-                font-size: 80%;
-                font-family: Helvetica, Arial, sans-serif;
-            }
-            #intro {
-                height: 250px;
-                font-size: 80%;
-                font-family: Helvetica, Arial, sans-serif;
-            }
-	   #amount {
-                font-size: 80%;
-                font-family: Helvetica, Arial, sans-serif;
-            }
-	    #amount_label{
-                font-size: 80%;
-                font-family: Helvetica, Arial, sans-serif;
-            }
-            .desc {
-                text-align: center;
-            }
-            .info img {
-                float: left;
-            }
-            #zselect {
-                padding-top: 1em;
-            }
-            v\:* {
-                behavior:url(#default#VML);
-            }
-	    
-            .play {
-                width:24px;
-                height:24px;
-                background-image: url(Play24.gif);
-                float:left;
-            }
-            .pause {
-                width:24px;
-                height:24px;
-                background-image: url(Pause24.gif);
-                float:left;
-            }
-	    #lsbox {
-                width:180px;
-            }
-	    #stop {
-                width:24px;
-                height:24px;
-                background-image: url(Stop24.gif);
-                float:left;
-            }
-        </style>
+	<script type="text/javascript" src="./detectmobilebrowser.js"></script>
+	<script type="text/javascript" src="./options_panel.js"></script>
+
         <script type="text/javascript">
             //<![CDATA[
             var map = null;
             var speed_mult = 0;
             var fcancel = null;
             var maxZ = 0;
-	    var tracks = new Array();
-	    var start = 0.0;
-	    var end;
-	    var isSetup = false;
-	    var longestTimeOffset;
-	    var sliderTimeIncrement = 0.0;
-	    var goingBackwards = false;
-	    var showIncrement = false;
-	    var forceDisplay = false;
+            var tracks = new Array();
+            var start = 0.0;
+            var end;
+            var isSetup = false;
+            var longestTimeOffset;
+            var sliderTimeIncrement = 0.0;
+            var goingBackwards = false;
+            var showIncrement = false;
+            var forceDisplay = false;
+            var pauseClass = "pause";
+            var playClass = "play";
+            var stopClass = "stop";
+            var sliderClass = "slider";
+            var isMobile = false;
+            var colourIndex = 0.0;
 
             function initialize() {
                 // Start with animation disabled
@@ -127,6 +62,7 @@ comment) -->
                 speed_mult = 0;
                 maxZ = 0;
 
+                //~ map = new mxn.Mapstraction(document.getElementById("map_ol"), "googlev3", true);
                 map = new mxn.Mapstraction(document.getElementById("map_ol"), "openlayers", true);
 
                 // set default controls and map type
@@ -138,111 +74,114 @@ comment) -->
 
                 map.setMapType(mxn.Mapstraction.ROAD);
 
-        if(window.location.search) {
-            // Was a file specified?
-            var params = window.location.search.slice(1).split("&");
-            var vals = new Array(params.length);
-            for(var i = 0;i < params.length;i++) {
-                var item = params[i].split("=");
-                vals[item[0]] = item[1];
-            }
+                if (window.location.search) {
+                    // Was a fcommand option specified?
+                    var params = window.location.search.slice(1).split("&");
+                    var vals = new Array(params.length);
+                    for (var i = 0; i < params.length; i++) {
+                        var item = params[i].split("=");
+                        vals[item[0]] = item[1];
+                    }
 
-            if(vals["file"]) {
-		addNewListItem(vals["file"]);
-            }
-	}
-	
-	        var tracksShown = false;
-		
+                    if (vals["file"]) {
+                        addNewListItem(vals["file"]);
+                    }
+
+                    if (vals["demo"]) {
+                        addNewListItem('test.xml');
+                        addNewListItem('826703.gpx');
+                        addNewListItem('582056.gpx');
+                    }
+                }
+                var tracksShown = false;
+
                 if (!tracksShown) {
                     // display the map centered on a latitude and longitude
-                    var startpt = new mxn.LatLonPoint(35, -95);
+                    var startpt = new mxn.LatLonPoint(56, -3);
                     map.setCenterAndZoom(startpt, 5);
                 }
-
             }
 
             function set_speed_mult(val) {
-		if($("#playPause").attr("class") == "pause"){
-		    $("#playPause").click();
-		}
+                if ($("#playPauseButton").attr("class") == pauseClass) {
+                    $("#playPauseButton").click();
+                }
                 speed_mult = val;
             }
-	    
-	    function clear_map() {
-		map.removeAllMarkers();
-		map.removeAllPolylines();
+
+            function clear_map() {
+                map.removeAllMarkers();
+                map.removeAllPolylines();
             }
-	    
-	    function get_available_colour(trackIndex) {
-		var colors = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#00ffff", "#ff00ff", "#000000", "#ffffff"];
-		var n = colors.length;
-		var colourIndex = trackIndex % n;
-		return colors[colourIndex];
+
+            function get_available_colour(trackIndex) {
+                var colors = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#00ffff", "#ff00ff", "#000000", "#ffffff"];
+                var n = colors.length;
+                var theColour = colors[colourIndex % n];
+                ++colourIndex;
+                return theColour;
             }
-	    
-	    function reset() {
+
+            function reset() {
                 clear_map();
-		$("#playPause").attr("class", "play");
-		$( "#slider" ).slider("value", 0.0);
-		start = 0.0;
-		end = 0.0;
+                $("#playPauseButton").attr("class", playClass);
+                $("#playSlider").slider("value", 0.0);
+                start = 0.0;
+                end = 0.0;
             }
-	    
-	    function set_elapsed_time_display(){
-	        var currentPos = 0.0;
-		if(end){
-			currentPos = end;
-			}
-			
-		var displayValue = currentPos / 1000;
-		var displayOffset = longestTimeOffset / 1000;
-		var displayText = displayValue + "/" + displayOffset;
-		$( "#amount" ).val(displayText);
-	    }
+
+            function set_elapsed_time_display() {
+                var currentPos = 0.0;
+                if (end) {
+                    currentPos = end;
+                }
+
+                var displayValue = currentPos / 1000;
+                var displayOffset = longestTimeOffset / 1000;
+                var displayText = displayValue + "/" + displayOffset;
+                $("#amount").val(displayText);
+            }
 
             // Display all of the tracks from a GPX file at the specified
             // zoom level. Input from the UI determines whether we will
             // animate the track or display it statically.
-	    // todo - add a start time 
-	    // if 0 or undefined run  setup
-	    // else just animate or display
+            // todo - add a start time 
+            // if 0 or undefined run  setup
+            // else just animate or display
             function showtracks() {
-                var colors = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#00ffff", "#ff00ff", "#000000", "#ffffff"],
-		zoom = 5;
-		var timeout_id = 0;
+                zoom = 5;
+                var timeout_id = 0;
 
-		if(!isSetup || goingBackwards || showIncrement){		
-		       clear_map();
-			
-			if(goingBackwards){
-			goingBackwards = false;
-			}
-		}
-		
+                if (!isSetup || goingBackwards || showIncrement) {
+                    clear_map();
+
+                    if (goingBackwards) {
+                        goingBackwards = false;
+                    }
+                }
+
                 // Setup function to center and zoom the map appropriately
                 // to display the tracks
-		// precon - if there are tracks that they are valid
-                var f_setup = function (f_next) {	                        
-			var tracksLength = tracks.length;
+                // precon - if there are tracks that they are valid
+                var f_setup = function (f_next) {
+                        var tracksLength = tracks.length;
                         var theMinLon = 180.0;
                         var theMaxLon = -180.0;
                         var theMinLat = 90.0;
                         var theMaxLat = -90.0;
-			var badFiles = new Array(); // should not be needed cos of the precon
-
+                        var badFiles = new Array(); // should not be needed cos of the precon
                         for (var i = 0; i < tracksLength; ++i) {
                             var bounds = tracks[i].theBounds;
-			    
-			    if(bounds === null){
-			         var theFileName = tracks[i].fileName;
-				 badFiles.push(theFileName);
-			    } else {
-				    theMinLon = Math.min(theMinLon, bounds.sw.lon);
-				    theMaxLon = Math.max(theMaxLon, bounds.ne.lon);
-				    theMinLat = Math.min(theMinLat, bounds.sw.lat);
-				    theMaxLat = Math.max(theMaxLat, bounds.ne.lat);
-			    }
+
+                            if (bounds === null) {
+                                var theFileName = tracks[i].fileName;
+                                badFiles.push(theFileName);
+                            } else {
+                                theMinLon = Math.min(theMinLon, bounds.sw.lon);
+                                theMaxLon = Math.max(theMaxLon, bounds.ne.lon);
+                                theMinLat = Math.min(theMinLat, bounds.sw.lat);
+                                theMaxLat = Math.max(theMaxLat, bounds.ne.lat);
+                            }
                         };
 
                         var centerLon = (theMaxLon + theMinLon) / 2.,
@@ -262,307 +201,216 @@ comment) -->
                         map.setCenterAndZoom(new mxn.LatLonPoint(centerLat, centerLon), zoom);
 
                         isSetup = true;
-			start = 0.0;
-			//~ end = 1.0;
-			
+                        start = 0.0;
+                        //~ end = 1.0;
                         f_next();
                     }
 
                     // Animate the tracks
                 var f_animate = function () {
-		if(!end){
-		   end = 1.0;
-		}
-		
-		if(end === 0.0){
-		   end = 1.0;
-		   }
-			animateTracks();
+                        if (!end) {
+                            end = 1.0;
+                        }
+
+                        if (end === 0.0) {
+                            end = 1.0;
+                        }
+                        animateTracks();
                     };
-		    
-		var animateTracks = function () {
-		        //~ if(showIncrement === true){
-				map.removeAllPolylines();
-				//~ Components.utils.forceGC();
-				//~ window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-  //~ .getInterface(Components.interfaces.nsIDOMWindowUtils)
-  //~ .garbageCollect();
-				//~ }
-		      f_display();
-		      set_elapsed_time_display();
-		      
-		      if(end < longestTimeOffset){
-		      var noOfIncrements = 0.0;
-		      if(end < 2.0){
-		          end = 0.0;
-			  start = 0.0;
-			  noOfIncrements = 0;
-			  } else {
-			      noOfIncrements = end / sliderTimeIncrement;
-			}
-			      
-		      $( "#slider" ).slider("value", noOfIncrements);
-		      				if(showIncrement === true){
-					start = end;
-					}
-		      end = end + sliderTimeIncrement;
-		      timeout_id = setTimeout(animateTracks, sliderTimeIncrement / speed_mult);
-		      } else {
-			$('#playPause').click();
-		      }
+
+                var animateTracks = function () {
+                        //~ if(showIncrement === true){
+                        map.removeAllPolylines();
+                        //~ }
+                        f_display();
+                        set_elapsed_time_display();
+
+                        if (end < longestTimeOffset) {
+                            var noOfIncrements = 0.0;
+                            if (end < 2.0) {
+                                end = 0.0;
+                                start = 0.0;
+                                noOfIncrements = 0;
+                            } else {
+                                noOfIncrements = end / sliderTimeIncrement;
+                            }
+
+                            $("#playSlider").slider("value", noOfIncrements);
+                            if (showIncrement === true) {
+                                start = end;
+                            }
+                            end = end + sliderTimeIncrement;
+                            timeout_id = setTimeout(animateTracks, sliderTimeIncrement / speed_mult);
+                        } else {
+                            $('#playPauseButton').click();
+                        }
                     };
-		    
-	      fcancel = function(){
-	          if(timeout_id > 0){
-		    clearTimeout(timeout_id);
-		    }
-		    };
+
+                fcancel = function () {
+                    if (timeout_id > 0) {
+                        clearTimeout(timeout_id);
+                    }
+                };
 
                 // Display the tracks.
                 var f_display = function () {
                         var tracksLength = tracks.length;
-			var displayStart = start;
-			if(!showIncrement){
-			    displayStart = 0.0;
-			}
+                        var displayStart = start;
+                        if (!showIncrement) {
+                            displayStart = 0.0;
+                        }
 
                         for (var i = 0; i < tracksLength; ++i) {
                             tracks[i].display(map, forceDisplay, displayStart, end);
                         }
-			
-			if(forceDisplay){
-				forceDisplay = false;
-			}
+
+                        if (forceDisplay) {
+                            forceDisplay = false;
+                        }
                     };
 
-                if (speed_mult == 0 || $("#playPause").attr("class") == "play") {
-		    if(isSetup){
-		        f_display();
-		    } else {
-		       f_setup(f_display);
-		    }
+                if (speed_mult == 0 || $("#playPauseButton").attr("class") == playClass) {
+                    if (isSetup) {
+                        f_display();
+                    } else {
+                        f_setup(f_display);
+                    }
                 } else {
-		    if(isSetup){
-		        f_animate();
-		    } else {
-		       f_setup(f_animate);
-		    }
+                    if (isSetup) {
+                        f_animate();
+                    } else {
+                        f_setup(f_animate);
+                    }
                 }
             }
 
-	function listbox_remove(sourceID) {
-                //get the listbox object from id.
-                var src = document.getElementById(sourceID);
-		var removedItems = new Array();
+            $(document).ready(function () {
+                $("#intro").dialog({
+                    autoOpen: false,
+                    modal: true,
+                    width: 450
+                });
+                $("#source_code").dialog({
+                    autoOpen: false,
+                    modal: true,
+                    width: 400
+                });
+                $("#add_empty").dialog({
+                    autoOpen: false,
+                    modal: true
+                });
+                $("#add_already_exists").dialog({
+                    autoOpen: false,
+                    modal: true
+                });
+                $("#no_gps_data").dialog({
+                    autoOpen: false,
+                    modal: true
+                });
+                $("#no_file").dialog({
+                    autoOpen: false,
+                    modal: true
+                });
+                initialize();
 
-                //iterate through each option of the listbox
-                for (var count = src.options.length - 1; count >= 0; count--) {
-                    //if the option is selected, delete the option
-                    if (src.options[count].selected == true) {
-		        var itemText = src.options[count].text;
-			removedItems.push(count);
-			
-                        try {
-                            src.remove(count, null);
-                        } catch (error) {
-                            src.remove(count);
+                if ($.browser.mobile === true) {
+                    isMobile = true;
+                    $("#other_links").hide();
+                    pauseClass = "pause_m";
+                    playClass = "play_m";
+                    stopClass = "stop_m";
+                    // note: tried to use a different class for the slider
+                    // but for soem reason lost the slider handle
+                    $("#playSlider").css("margin-left", "106px");
+                    $("#playSlider").css("margin-top", "7px");
+                    $("#playSlider").css("font-size", "200%");
+                }
+
+                $("#playSlider").slider({
+                    value: 0,
+                    min: 0,
+                    max: 100,
+                    step: 1,
+                    slide: function (event, ui) {
+                        if ($("#playPauseButton").attr("class") == pauseClass) {
+                            $("#playPauseButton").click();
+                        }
+                        var prevEnd = end;
+                        var sliderValue = ui.value;
+                        end = (longestTimeOffset * ui.value) / 100;
+
+                        if (prevEnd && prevEnd > end) {
+                            goingBackwards = true;
+                        }
+                        if (start > end) {
+                            if (showIncrement === true) {
+                                start = (longestTimeOffset * (ui.value - 1.0)) / 100;
+                            } else {
+                                start = 0.0;
+                            }
+                            goingBackwards = true;
+                        }
+                        set_elapsed_time_display();
+                        showtracks();
+                        start = end;
+                    }
+                });
+                $("#amount").val($("#playSlider").slider("value"));
+                //~ $('#playSlider').attr('class', sliderClass);
+                $('#playPauseButton').bind("click", function () {
+                    if ($(this).attr("class") == playClass) {
+                        $(this).attr("class", pauseClass);
+                        if (speed_mult == 0) {
+                            end = longestTimeOffset;
+                            $("#playSlider").slider("value", 100.0);
+                            set_elapsed_time_display();
+                            $(this).attr("class", playClass);
+                            if (end === 0.0 && longestTimeOffset === 0.0) {
+                                forceDisplay = true;
+                            }
+                        }
+                        showtracks();
+                    } else {
+                        if (fcancel) {
+                            fcancel();
+                        }
+                        $(this).attr("class", playClass);
+                    }
+                });
+                $('#playPauseButton').attr('class', playClass);
+
+                $('#stopButton').bind("click", function () {
+                    if (fcancel) {
+                        fcancel();
+                    }
+                    reset();
+                    set_elapsed_time_display();
+                });
+                $('#stopButton').attr('class', stopClass);
+
+                $('#IncrementButton').bind("click", function () {
+                    if (!showIncrement) {
+                        if ($("#playPauseButton").attr("class") == pauseClass) {
+                            $("#playPauseButton").click();
                         }
                     }
-                }
-
-		// rebuild the tracks
-		var newTracks = new Array();
-                var tracksLength = tracks.length;
-		var removedItemsLength = removedItems.length;
-		for (var i = 0; i < tracksLength; ++i) {
-		    var matchFound = false;
-		    for(var j = 0; j < removedItemsLength; ++j){
-		          if(j === i){
-			      matchFound = true;
-			  }
-		    }
-		    if(!matchFound){
-		        newTracks.push(tracks[i]);
-		    }
-		}
-		tracks = newTracks;
-		
-		var newTracksLength = tracks.length;
-		longestTimeOffset = 0.0;
-		for (var k = 0; k < newTracksLength; ++k) {
-			longestTimeOffset = Math.max(longestTimeOffset, tracks[k].elapsedTime);
-		}
-		
-		sliderTimeIncrement = longestTimeOffset / 100;	
-		
-		isSetup = false;
-		reset();
-		set_elapsed_time_display();
-            }
-	    
-	    function completeAdd(theTrack){
-		tracks.push(theTrack);
-		longestTimeOffset = 0.0;
-		
-		var tracksLength = tracks.length;
-		for (var i = 0; i < tracksLength; ++i) {
-			longestTimeOffset = Math.max(longestTimeOffset, tracks[i].elapsedTime);
-		}
-		
-		sliderTimeIncrement = longestTimeOffset / 100;
-		
-		var listBox = document.getElementById('lsbox');
-
-                var listBoxItem = document.createElement("option");
-		
-		var displayText = theTrack.fileName;
-		if(displayText.indexOf("openstreetmap") !== -1){
-			var splitUrl = displayText.split("/");
-			var trackIdNumber =  splitUrl[splitUrl.length -1];
-			displayText = "OSM-" + trackIdNumber;
-		} 
-		
-                listBoxItem.value = theTrack.fileName;
-                listBoxItem.text = displayText;
-                listBox.add(listBoxItem, null);	  
-
-                isSetup = false;
-		set_elapsed_time_display();
-	    }
-	    
-	    function errorAdd(itemText){
-	    // todo just move this as an alert to GPSTrack
-	    }
-
-            function addNewListItem(newItem) {
-		var listBox = document.getElementById('lsbox');
-                var itemValue = document.getElementById('txtValue');
-		if(newItem){
-		    itemValue.value = newItem;
-		    itemValue.text = newItem;
-		}
-
-                if (itemValue.value == '') {
-                    alert('please enter option value');
-                    itemValue.focus();
-                    return false;
-                }
-
-                if (isOptionAlreadyExist(listBox, itemValue.value)) {
-                    alert('already exists');
-                    itemValue.focus();
-                    return false;
-                }
-		
-		var trackIndex = tracks.length;
-		var trackColour = get_available_colour(trackIndex);
-		var theTrace = new GPSTrack(itemValue.value, trackColour, completeAdd, errorAdd);
-                var fetched = theTrace.fetch();
-
-                return true;
-            }
-
-            function isOptionAlreadyExist(listBox, value) {
-                var exists = false;
-                for (var x = 0; x < listBox.options.length; x++) {
-                    if (listBox.options[x].value == value || listBox.options[x].text == value) {
-                        exists = true;
-                        break;
+                    showIncrement = true;
+                });
+                $('#FullTrackButton').bind("click", function () {
+                    if (showIncrement) {
+                        if ($("#playPauseButton").attr("class") == pauseClass) {
+                            $("#playPauseButton").click();
+                        }
                     }
-                }
-                return exists;
-            }
-	    
-	                //]]>
-			
-	    </script>
-
-		<script type="text/javascript">
-	$(function() {
-		$( "#slider" ).slider({
-			value:0,
-			min: 0,
-			max: 100,
-			step: 1,
-			slide: function( event, ui ) {
-			        if($("#playPause").attr("class") == "pause"){
-				    $("#playPause").click();
-				}
-				var prevEnd = end;
-			        var sliderValue = ui.value;
-				end = (longestTimeOffset * ui.value) / 100;
-				
-				if(prevEnd && prevEnd > end){
-				    goingBackwards = true;
-				    }
-				if(start > end){
-					if(showIncrement === true){
-						start =  (longestTimeOffset * (ui.value - 1.0)) / 100;
-					} else {
-						start = 0.0;
-					}
-					goingBackwards = true;
-				}
-				set_elapsed_time_display();
-				showtracks();
-				start = end;
-			}
-		});
-		$( "#amount" ).val($( "#slider" ).slider( "value" ) );
-	});
-	</script>
-        <script type="text/javascript">
-            $(document).ready(function () {
-                $('#playPause').bind("click", function () {
-                    if ($(this).attr("class") == "play"){
-		        $(this).attr("class", "pause");
-			if (speed_mult == 0){
-			    end = longestTimeOffset;
-			    $( "#slider" ).slider("value", 100.0);
-			    set_elapsed_time_display();
-			    $(this).attr("class", "play");
-			    if(end === 0.0 && longestTimeOffset === 0.0){
-				forceDisplay = true;
-			    }
-			}
-			showtracks();
-                   } else {
-			if(fcancel){
-			    fcancel();
-			    }
-			   $(this).attr("class", "play");
-		       }
-                });
-		$('#stop').bind("click", function () {
-		    if(fcancel){
-		        fcancel();
-			}
-                   reset();
-		   set_elapsed_time_display();
-                });
-		$('#IncrementButton').bind("click", function () {
-			if(!showIncrement){
-			        if($("#playPause").attr("class") == "pause"){
-				    $("#playPause").click();
-				}
-			} 
-			showIncrement = true;
-                });
-		$('#FullTrackButton').bind("click", function () {
-			if(showIncrement){
-			        if($("#playPause").attr("class") == "pause"){
-				    $("#playPause").click();
-				}
-			} 
-			showIncrement = false;
+                    showIncrement = false;
                 });
             });
+	//]]>
         </script>
     </head>
     
-    <body onload="initialize()">
-        <div id="intro">
-            <h2 id="title">GPS Track Plotting/Animation Demo</h2>
+    <body>
+        <div id="intro" title="GPS Track Plotting/Animation Demo">
             <p>This page shows <a href="http://www.topografix.com/gpx.asp">GPX-format</a> Tracks on a map. 
 	    To begin add some tracks to the list.
 	    if you want to use an <a href="http://www.openstreetmap.org/traces">Openstreetmap</a> track you can just paste in the URL (e.g. http://www.openstreetmap.org/user/laser%20jock/traces/1232838).
@@ -574,9 +422,9 @@ comment) -->
 	    </p>
 	    
             <h3 class="subhead">Animation</h3>
-            <p>To show the tracks as an animation, select the speed you want (you can play the animation in real time but this may be slow).
+            <p>To show the tracks as an animation, select the speed you want (you can play the animation in real time but this may be slow) and then hit the play button.
 	    Again you can use the slider but this will pause the animation.
-	    The time interval used for each animation increment is on hundedth of the total time.
+	    The time interval used for each animation increment is one hundredth of the total time.
 	    </p>
         </div>
 
@@ -589,9 +437,9 @@ comment) -->
 	<tr>
 	    <td>
  		<span> 
-		    <div id="stop" class="stop"></div>
-                    <div id="playPause" class="play"></div>
-		<div id="slider"></div>
+		    <div id="stopButton" class="stop"></div>
+                    <div id="playPauseButton" class="play"></div>
+		<div id="playSlider" class="slider"></div>
                  </span>      
                 </td>
                 </tr>
@@ -604,10 +452,14 @@ comment) -->
 	</table>
 	
             <div id="info">
-                <p>Select animation speed:</p>
+	    <p>
+	                                <button id="btnHelp" onclick="help_button();">Help</button>
+	                                <button id="btnCredits" onclick="credits_button();">Credits</button>
+              </p>
+	      <p>Animation speed:</p>
                 <form>
                     <select id="speed" name="speed" size="1" onchange="set_speed_mult(this.options[this.selectedIndex].value)">
-                        <option selected="selected" value="0">no animation</option>
+                        <option selected="selected" value="0">none</option>
                         <option value="1">real-time</option>
                         <option value="2">2x</option>
                         <option value="5">5x</option>
@@ -618,15 +470,15 @@ comment) -->
                     </select>
                 </form>
 
-                <p>Select display type:</p>
-<Input type = radio Name = r1 Value = "Full" id="FullTrackButton" checked=true>Full track
-<Input type = radio Name = r1 Value = "Increment" id="IncrementButton">Increment
-
-                <p>Add GPS tracks to the list below.
-		Animation/plotting will start/stop when you press the play/pause button.</p>
+                <p>Track Display:</p>
+		<div id="displayRadio">
+<Input type = radio Name = r1 Value = "Full" id="FullTrackButton" checked=true>Full
+<Input type = radio Name = r1 Value = "Increment" id="IncrementButton">Inc
+                </div>
+                <p>Add GPS tracks to the list below.</p>
         <table>
             <tr>
-                <td align="left">
+                <td align="center">
                     <input name="txtValue" type="text" id="txtValue"
                     />
                 </td>
@@ -638,24 +490,29 @@ comment) -->
                 <tr>
                     <tr>
                         <td align="center">
-                            <select id="lsbox" name="lsbox" size="10" multiple>
+                            <select id="lsbox" name="lsbox" size="6">
                             </select>
                         </td>
                     </tr>
                     <tr>
                         <td align="center">
-                            <button onclick="listbox_remove('lsbox');">Delete</button>
+                            <button id="btnDeleteItem" onclick="listbox_remove('lsbox');">Delete</button>
                         </td>
                     </tr>
         </table>
             </div>
 
-        <div id="source_code">
-	                <h3 class="subhead">Source</h3>
+        <div id="source_code" title="Credits">
             <p>The original GPX handling code is from <a href="http://home.mindspring.com/%7Emfkenney/gpstracks.html">Mike Kenney's site</a>.
-	    The code has been changed: to use a map abstraction layer; to use a GPSTrack object and to allow multiple gpx files to be added.
+	    This code has been changed to: 
+	    <ul>
+	    <li>use a <a href="http://code.google.com/p/mapstraction">map abstraction layer</a></li>
+	    <li>use a GPSTrack object</li>
+	    <li>allow multiple gpx files to be added</li>
+	    </ul>
 	   </p>
 	   </div>
+	<div id="other_links">
 	<p>
 	<a href="./gpstracks_mxn_google.html">
 	Google Maps Version</a>
@@ -668,6 +525,18 @@ comment) -->
 	<a href="mailto:alan_leslie@ymail.com?Subject=GPS tracks">
 	Send Mail</a>
 	</p>
-    </body>
-
+	</div>  
+	<div id="add_empty" title="Add Error">
+	Please input a valid GPS track file name before selecting add.
+	</div>
+	<div id="add_already_exists" title="Add Error">
+	The GPS track already exists in the list.
+	</div>
+	<div id="no_gps_data" title="Add Error">
+	The file/URL is not a valid GPS track.
+	</div>
+	<div id="no_file" title="Add Error">
+	File/URL inot found.
+	</div>
+</body>
 </html>
