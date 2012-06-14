@@ -261,8 +261,8 @@ comment) -->
 	    function get_available_colour(trackIndex) {
 		var colors = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#00ffff", "#ff00ff", "#000000", "#ffffff"];
 		var n = colors.length;
-		++colourIndex;
 		var theColour = colors[colourIndex % n];
+		++colourIndex;
 		return theColour;
             }
 	    
