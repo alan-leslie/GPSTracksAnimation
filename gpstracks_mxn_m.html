@@ -193,6 +193,7 @@ comment) -->
 	    var stopClass = "stop";
 	    var sliderClass = "slider";
 	    var isMobile = false;
+	    var colourIndex = 0.0;
 
             function initialize() {
                 // Start with animation disabled
@@ -225,6 +226,12 @@ comment) -->
             if(vals["file"]) {
 		addNewListItem(vals["file"]);
             }
+	    
+	    if(vals["demo"]) {
+		addNewListItem('test.xml');
+		addNewListItem('826703.gpx');
+		addNewListItem('582056.gpx');
+	    }
 	}
 	
 	        var tracksShown = false;
@@ -254,8 +261,9 @@ comment) -->
 	    function get_available_colour(trackIndex) {
 		var colors = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#00ffff", "#ff00ff", "#000000", "#ffffff"];
 		var n = colors.length;
-		var colourIndex = trackIndex % n;
-		return colors[colourIndex];
+		++colourIndex;
+		var theColour = colors[colourIndex % n];
+		return theColour;
             }
 	    
 	    function reset() {
@@ -583,8 +591,17 @@ comment) -->
 	    }
 	    
 	    function errorAdd(itemText){
-	    		$( "#no_gps_data" ).dialog('open');
-	    		$("#btnAddItem").attr("disabled", false);
+	    	$( "#no_gps_data" ).dialog('open');
+	    	resetAddButton();
+	    }
+	    
+	    function fileNotFoundError(){
+	    	$( "#no_file" ).dialog('open');
+	    	resetAddButton();
+	    }
+
+	    function resetAddButton(){
+	    	$("#btnAddItem").attr("disabled", false);
 	    }
 
             function help_button() {
@@ -622,7 +639,7 @@ comment) -->
 		var trackIndex = tracks.length;
 		var trackColour = get_available_colour(trackIndex);
 		var theTrace = new GPSTrack(itemValue.value, trackColour, completeAdd, errorAdd);
-                var fetched = theTrace.fetch();
+                var fetched = theTrace.fetch(null, fileNotFoundError);
 
 		$("#btnAddItem").attr("disabled", true);
                 return true;
@@ -650,6 +667,7 @@ comment) -->
 		$( "#add_empty" ).dialog({ autoOpen: false, modal: true });
 		$( "#add_already_exists" ).dialog({ autoOpen: false, modal: true });
 		$( "#no_gps_data" ).dialog({ autoOpen: false, modal: true });	
+		$( "#no_file" ).dialog({ autoOpen: false, modal: true });	
 
                 if ($.browser.mobile === true) {
 			isMobile = true;
@@ -873,6 +891,8 @@ comment) -->
 	<div id="no_gps_data" title="Add Error">
 	The file/URL is not a valid GPS track.
 	</div>
-   </body>
-
+	<div id="no_file" title="Add Error">
+	File/URL inot found.
+	</div>
+</body>
 </html>
