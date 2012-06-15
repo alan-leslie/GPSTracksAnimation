@@ -1,0 +1,8 @@
+Derived from Mike Kenney's site for GPS track plotting and animation - http://home.mindspring.com/~mfkenney/gpstracks.html.
+I've made a few tweaks so that you can compare different tracks.
+Motivation being so that I can see if and when the trip you did today is faster than the one yesterday.
+Demo (of Edinburgh tracks) is at http://www.alfi2fe.net/gpstracks_mxn.html?demo=true.
+Start from scratch using http://www.alfi2fe.net/gpstracks_mxn.html and add any www.openstreetmap.org tracls that you want.
+Note that there is a memory leak in the open layers version with animation. 
+To be resolved.
+
