@@ -211,7 +211,7 @@ GPSTrack.prototype.getBoundsFromSegments = function () {
 };
 
 GPSTrack.prototype.display = function (map, forceDisplay, start, end, icon) {
-    plot_these_segments(map, 3, this.colour, 3, this.theSegments, forceDisplay, start, end);
+    plot_these_segments(map, 3, this.colour, 1, this.theSegments, forceDisplay, start, end);
     plot_points(this.theWayPoints, map, icon);
 };
 
@@ -369,7 +369,7 @@ function plot_this_pointlist(pts, map, lw, lineColor, forceDisplay, start, end, 
 	    
 		if(!forceDisplay){
 			if(end !== 0.0){	    
-				if(!end || (theTimeOffset > start && theTimeOffset < end)){
+				if(!end || (theTimeOffset >= start && theTimeOffset <= end)){
 					shouldDisplay = true;
 				}
 			}
@@ -558,6 +558,11 @@ function plot_waypoints(gpx, map, xsl, icon) {
 //~ else
 //~ plot_points(gpxGetElements(rte, "rtept"), map, icon);
 //~ }
+
+mxn.Marker.prototype.openInfoWindow = function(){
+	this.openBubble();
+}
+
 /**
  * Plot a series of GPX points as markers. These points may be waypoints,
  * route-points, or track-points (not recommended because there tend to
@@ -569,38 +574,62 @@ function plot_waypoints(gpx, map, xsl, icon) {
  * @param     icon    GIcon for each marker (optional)
  */
 function plot_points(pts, map, icon) {
-
-    function make_handler(marker, html) {
+     function make_handler(marker, html) {
         return function () {
-            marker.openInfoWindowHtml(html);
-        }
+		marker.openInfoWindow()
+		}
     }
 
-    //~ if(!icon) {
-    //~ icon = new GIcon();
-    //~ icon.image = "http://labs.google.com/ridefinder/images/mm_20_red.png";
-    //~ icon.shadow = "http://labs.google.com/ridefinder/images/mm_20_shadow.png";
-    //~ icon.iconSize = new GSize(12, 20);
-    //~ icon.shadowSize = new GSize(22, 20);
-    //~ icon.iconAnchor = new GPoint(6, 20);
-    //~ icon.infoWindowAnchor = new GPoint(5, 1);
-    //~ }
     for (var i = 0; i < pts.length; i++) {
-
         var marker = new mxn.Marker(new mxn.LatLonPoint(parseFloat(pts[i].getAttribute("lat")), parseFloat(pts[i].getAttribute("lon")))); //, icon);
         var links = gpxGetElements(pts[i], "link");
         var desc = gpxGetElements(pts[i], "desc")[0];
-        var html = [];
-        var options = {
+        var name = gpxGetElements(pts[i], "name")[0];
+	var html = [];
+	    
+	if(name) {
+		var url = null
+		
+		if(name.firstChild.nodeType === 1){
+			url = name.firstChild.getAttribute("href");
+		}
+
+		if(url){
+			html.push("<a href='" + url + "' target='_new'>" + name.firstChild.textContent + "</a>");
+		} else {
+			html.push(name.firstChild.textContent);
+		}
+        }
+	    
+        if(desc) {
+		html.push("<p class='desc'>" + desc.firstChild.textContent + "</p>");
+        }
+	
+	var joinedHtml = html.join("");
+
+	var options = {
             icon: "./timemap/images/red-circle.png",
             iconSize: [16, 16],
-            iconAnchor: [8, 8]
+            iconAnchor: [8, 8],
+	    infoBubble: joinedHtml
         };
+	
+	//~ infoBubble : html,
+	//~ label : item.title,
+	//~ date : "new Date(\""+item.date+"\")",
+	//~ iconShadow : item.icon_shadow,
+	//~ marker : item.id,
+	//~ iconShadowSize : item.icon_shadow_size,
+	//~ icon : item.icon,
+	//~ iconSize : item.icon_size,
+	//~ category : item.source_id,
+	//~ draggable : false,
+	//~ hover : false
+	
         marker.addData(options);
+	
+	       //~ GEvent.addListener(marker, "click", make_handler(marker, html.join("")));
 
-        //~ if(desc) {
-        //~ html.push("<p class='desc'>" + desc + "</p>");
-        //~ }
 
         //~ for(var j = 0;j < links.length;j++) {
         //~ var url = links[j].getAttribute("href");
@@ -614,10 +643,8 @@ function plot_points(pts, map, icon) {
         //~ html.push("<a href='" + url + "' target='_new'>" + text + "</a>");
         //~ }
 
-
-        //~ if(html.length > 0) {
-        //~ GEvent.addListener(marker, "click", make_handler(marker, html.join("")));
-        //~ }
         map.addMarker(marker);
-    }
+	
+	marker.click.addHandler(make_handler(marker, joinedHtml));
+   }
 }

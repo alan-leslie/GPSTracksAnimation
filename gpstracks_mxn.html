@@ -22,8 +22,8 @@ comment) -->
         type="text/javascript"></script>
         <script src="http://jquery-ui.googlecode.com/svn/tags/latest/ui/minified/i18n/jquery-ui-i18n.min.js"
         type="text/javascript"></script>
- <!--	<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyDdfZ991xmwxK_3DfPpFROX20AtvRiCKtQ&sensor=false"></script>	
-        <script type="text/javascript" src="http://timemap.googlecode.com/svn/tags/2.0.1/lib/mxn/mxn.js?(googlev3)"></script>	-->
+ 	<!---<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyDdfZ991xmwxK_3DfPpFROX20AtvRiCKtQ&sensor=false"></script>	
+        <script type="text/javascript" src="http://timemap.googlecode.com/svn/tags/2.0.1/lib/mxn/mxn.js?(googlev3)"></script>-->
         <script type="text/javascript" src="http://openlayers.org/api/OpenLayers.js"></script> 
         <script type="text/javascript" src="http://timemap.googlecode.com/svn/tags/2.0.1/lib/mxn/mxn.js?(openlayers)"></script> 
          <script src="gpstracks_mxn_files/reqcache.js" type="text/javascript"></script>
@@ -90,16 +90,16 @@ comment) -->
 
                     if (vals["demo"]) {
                         addNewListItem('test.xml');
-                        addNewListItem('826703.gpx');
-                        addNewListItem('582056.gpx');
+                         addNewListItem('582056.gpx');
+			 addNewListItem('826703.gpx');
                     }
                 }
                 var tracksShown = false;
 
                 if (!tracksShown) {
                     // display the map centered on a latitude and longitude
-                    var startpt = new mxn.LatLonPoint(56, -3);
-                    map.setCenterAndZoom(startpt, 5);
+                    var startpt = new mxn.LatLonPoint(55.951345,-3.202812);
+                    map.setCenterAndZoom(startpt, 13);
                 }
             }
 
@@ -113,6 +113,7 @@ comment) -->
             function clear_map() {
                 map.removeAllMarkers();
                 map.removeAllPolylines();
+		map.closeBubble();
             }
 
             function reset() {
@@ -280,6 +281,7 @@ comment) -->
                     $("#playSlider").css("margin-left", "106px");
                     $("#playSlider").css("margin-top", "7px");
                     $("#playSlider").css("font-size", "200%");
+		    $("#map_ol").css("height", "375px");
                 }
 		
 		initControlPanel();
@@ -289,24 +291,6 @@ comment) -->
     </head>
     
     <body>
-        <div id="intro" title="GPS Track Plotting/Animation Demo">
-            <p>This page shows <a href="http://www.topografix.com/gpx.asp">GPX-format</a> Tracks on a map. 
-	    To begin add some tracks to the list.
-	    if you want to use an <a href="http://www.openstreetmap.org/traces">Openstreetmap</a> track you can just paste in the URL (e.g. http://www.openstreetmap.org/user/laser%20jock/traces/1232838).
-	    </p>
-
-            <h3 class="subhead">Plotting</h3>
-	    <p>If you want to view the whole track(s) just hit the play button. 
-	    You can also use the slider (by clicking on it or by using the left and right arrow keys) to show parts of the tracks.
-	    </p>
-	    
-            <h3 class="subhead">Animation</h3>
-            <p>To show the tracks as an animation, select the speed you want (you can play the animation in real time but this may be slow) and then hit the play button.
-	    Again you can use the slider but this will pause the animation.
-	    The time interval used for each animation increment is one hundredth of the total time.
-	    </p>
-        </div>
-
 	<table id="map_table">
                 <tr>
                 <td>		
@@ -381,6 +365,24 @@ comment) -->
         </table>
             </div>
 
+        <div id="intro" title="GPS Track Plotting/Animation Demo">
+            <p>This page shows <a href="http://www.topografix.com/gpx.asp">GPX-format</a> Tracks on a map. 
+	    To begin add some tracks to the list.
+	    if you want to use an <a href="http://www.openstreetmap.org/traces">Openstreetmap</a> track you can just paste in the URL (e.g. http://www.openstreetmap.org/user/laser%20jock/traces/1232838).
+	    </p>
+
+            <h3 class="subhead">Plotting</h3>
+	    <p>If you want to view the whole track(s) just hit the play button. 
+	    You can also use the slider (by clicking on it or by using the left and right arrow keys) to show parts of the tracks.
+	    </p>
+	    
+            <h3 class="subhead">Animation</h3>
+            <p>To show the tracks as an animation, select the speed you want (you can play the animation in real time but this may be slow) and then hit the play button.
+	    Again you can use the slider but this will pause the animation.
+	    The time interval used for each animation increment is one hundredth of the total time.
+	    </p>
+        </div>
+	
         <div id="source_code" title="Credits">
             <p>The original GPX handling code is from <a href="http://home.mindspring.com/%7Emfkenney/gpstracks.html">Mike Kenney's site</a>.
 	    This code has been changed to: 
@@ -415,7 +417,7 @@ comment) -->
 	The file/URL is not a valid GPS track.
 	</div>
 	<div id="no_file" title="Add Error">
-	File/URL inot found.
+	File/URL not found or not valid XML.
 	</div>
 </body>
 </html>
